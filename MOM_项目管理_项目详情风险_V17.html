@@ -1,0 +1,3419 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MOM 一体化系统 - 项目管理（原型）</title>
+  <style>
+    /* --------------------------------------------------------------------------
+       DESIGN SYSTEM - Modern SaaS / Apple Style
+       -------------------------------------------------------------------------- */
+    :root {
+      /* Palette - Low Saturation, High Quality */
+      --bg-body: #F5F7FA;
+      --bg-surface: #FFFFFF;
+      --bg-surface-glass: rgba(255, 255, 255, 0.85);
+      
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      
+      /* Colors */
+      --text-main: #111827;
+      --text-secondary: #6B7280;
+      --text-tertiary: #9CA3AF;
+      
+      --brand-primary: #2563EB;
+      --brand-hover: #1D4ED8;
+      --brand-light: #EFF6FF;
+      --brand-border: #BFDBFE;
+
+      --danger: #EF4444;
+      --danger-bg: #FEF2F2;
+      --success: #10B981;
+      --success-bg: #ECFDF5;
+      --warn: #F59E0B;
+      --warn-bg: #FFFBEB;
+
+      /* Borders & Lines */
+      --border-subtle: #E5E7EB; /* Very light grey */
+      --border-focus: rgba(37, 99, 235, 0.4);
+
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 999px;
+
+      /* Shadows (Elevation) */
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+      --shadow-focus: 0 0 0 4px rgba(37, 99, 235, 0.15);
+
+      /* Transitions */
+      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+      /* Aliases for legacy variable names used in V15 HTML */
+      --bg: var(--bg-body);
+      --panel: var(--bg-surface);
+      --text: var(--text-main);
+      --muted: var(--text-secondary);
+      --line: var(--border-subtle);
+      --brand: var(--brand-main);
+      --ok: var(--success);
+      --shadow: var(--shadow-sm);
+      --radius: var(--radius-md);
+      --font: var(--font-sans);
+      --mono: var(--font-mono);
+}
+
+    /* --------------------------------------------------------------------------
+       RESET & BASE
+       -------------------------------------------------------------------------- */
+    * { box-sizing: border-box; outline: none; }
+    
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--bg-body);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased; /* Mac 字体平滑 */
+      line-height: 1.5;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+    /* --------------------------------------------------------------------------
+       LAYOUT STRUCTURE
+       -------------------------------------------------------------------------- */
+    .app { display: flex; min-height: 100vh; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow-x: hidden; position: relative; }
+    .content {
+      padding: 32px; /* Increased padding */
+      display: flex; flex-direction: column; gap: 20px;
+      max-width: 1400px; margin: 0 auto; width: 100%;
+    }
+
+    /* --------------------------------------------------------------------------
+       SIDEBAR (Dark Theme - Refined)
+       -------------------------------------------------------------------------- */
+    .sidebar {
+      width: 260px;
+      background: #0F172A; /* Deeper navy */
+      color: #E2E8F0;
+      padding: 24px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      flex-shrink: 0;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.02);
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 12px 24px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 12px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3B82F6, #8B5CF6); /* More modern gradient */
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+    .brand h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: #fff; margin: 0; }
+    
+    /* Navigation */
+    .nav-acc { margin-bottom: 4px; }
+    .nav-acc summary {
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 600; color: #94A3B8;
+      cursor: pointer; list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: all 0.2s var(--ease-out);
+    }
+    .nav-acc summary:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .nav-acc summary::after { content: '›'; font-size: 16px; transition: transform 0.2s; }
+    .nav-acc[open] summary::after { transform: rotate(90deg); }
+    .nav-acc summary::-webkit-details-marker { display: none; }
+
+    .nav { padding-left: 0; }
+    .nav a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; margin: 4px 0;
+      border-radius: var(--radius-md);
+      color: #CBD5E1; text-decoration: none;
+      font-size: 13px; font-weight: 500;
+      transition: all 0.2s var(--ease-out);
+      position: relative;
+    }
+    .nav a:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      transform: translateX(4px);
+    }
+    .nav a.active {
+      background: var(--brand-primary);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); /* Glow effect */
+    }
+    .nav .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+    
+    .footer-note { font-size: 11px; color: #64748B; line-height: 1.4; padding: 0 12px; }
+
+    /* --------------------------------------------------------------------------
+       TOPBAR (Glassmorphism)
+       -------------------------------------------------------------------------- */
+    .topbar {
+      height: 64px;
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(12px); /* Frosted glass */
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      position: sticky; top: 0; z-index: 10;
+      transition: box-shadow 0.3s;
+    }
+    /* Add shadow on scroll via JS (optional) or just default subtle shadow */
+    .topbar { box-shadow: var(--shadow-sm); }
+
+    .crumbs { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .pill {
+      background: #fff; border: 1px solid var(--border-subtle);
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 500; color: var(--text-main);
+      box-shadow: var(--shadow-xs);
+      transition: all 0.2s;
+    }
+    select.pill { cursor: pointer; }
+    select.pill:hover { border-color: #CBD5E1; }
+
+    /* --------------------------------------------------------------------------
+       CARDS & CONTAINERS
+       -------------------------------------------------------------------------- */
+    .card {
+      background: var(--bg-surface);
+      border: 0; /* Remove border */
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); /* Soft shadow */
+      overflow: hidden; /* For header borders */
+      transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+      will-change: transform;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md); /* Lift effect */
+    }
+    
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(249, 250, 251, 0.5); /* Subtle separate bg */
+    }
+    .card-title { font-size: 16px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; }
+    .card-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 400; }
+    .card-body { padding: 20px; }
+
+    /* --------------------------------------------------------------------------
+       FORMS & INPUTS (Modern Filled Style)
+       -------------------------------------------------------------------------- */
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; } /* Adjusted gap */
+    
+    .col-12 { grid-column: span 12; }
+    .col-8  { grid-column: span 8; }
+    .col-6  { grid-column: span 6; }
+    .col-4  { grid-column: span 4; }
+    .col-3  { grid-column: span 3; }
+    .col-2  { grid-column: span 2; }
+    .col-9  { grid-column: span 9; }
+
+    .field label {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.03em; /* Technical feel */
+    }
+    .req { color: var(--danger); }
+
+    input, select, textarea {
+      width: 100%;
+      background: #F9FAFB; /* Light grey fill */
+      border: 1px solid transparent; /* No border initially */
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text-main);
+      transition: all 0.2s var(--ease-out);
+      font-family: var(--font-sans);
+    }
+    input:hover, select:hover, textarea:hover {
+      background: #F3F4F6; /* Darker on hover */
+    }
+    input:focus, select:focus, textarea:focus {
+      background: #fff;
+      border-color: var(--brand-primary);
+      box-shadow: var(--shadow-focus);
+    }
+    input[readonly] {
+      background: #F3F4F6;
+      color: var(--text-tertiary);
+      border-color: transparent;
+      cursor: default;
+    }
+    
+    .hint { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; }
+
+    /* --------------------------------------------------------------------------
+       BUTTONS (Pill & Soft)
+       -------------------------------------------------------------------------- */
+    button {
+      border: 1px solid var(--border-subtle);
+      background: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.2s var(--ease-bounce);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    button:hover {
+      background: #F9FAFB;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    button:active { transform: translateY(1px) scale(0.98); }
+
+    /* Primary Button */
+    button.primary {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: #fff;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25); /* Colored shadow */
+    }
+    button.primary:hover {
+      background: var(--brand-hover);
+      box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
+    }
+    
+    /* Danger Button */
+    button.danger {
+      color: var(--danger);
+      border-color: transparent;
+      background: #FEF2F2;
+    }
+    button.danger:hover {
+      background: #FEE2E2;
+      box-shadow: none;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .row-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* --------------------------------------------------------------------------
+       TABLES (Clean & Spacious)
+       -------------------------------------------------------------------------- */
+    .table-wrap {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+    }
+    table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      min-width: 900px;
+    }
+    th, td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      text-align: left;
+    }
+    th {
+      background: #F9FAFB;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-secondary); font-weight: 600;
+    }
+    td { font-size: 13px; color: var(--text-main); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: #F8FAFC; }
+
+    /* --------------------------------------------------------------------------
+       TAGS & ALERTS
+       -------------------------------------------------------------------------- */
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 500;
+      border: 1px solid transparent;
+    }
+    .tag.save { background: #F3F4F6; color: #4B5563; }
+    .tag.approving { background: var(--brand-light); color: var(--brand-hover); }
+    .tag.rejected { background: var(--danger-bg); color: var(--danger); }
+    .tag.archived { background: var(--success-bg); color: var(--success); }
+
+    .notice {
+      padding: 16px; border-radius: var(--radius-md);
+      font-size: 13px; line-height: 1.6;
+      background: #F0F9FF; color: #0369A1;
+      border: 1px solid #BAE6FD;
+      display: flex; gap: 8px; flex-direction: column;
+    }
+    .notice.warn {
+      background: #FFFBEB; color: #B45309; border-color: #FDE68A;
+    }
+    
+    /* --------------------------------------------------------------------------
+       FLOW CARDS (Dashboard)
+       -------------------------------------------------------------------------- */
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .flow-card {
+      background: #fff;
+      border: 0;
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s var(--ease-out);
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 16px;
+      height: 100%;
+    }
+    .flow-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: transparent;
+      outline: 2px solid var(--brand-primary);
+      outline-offset: 2px;
+    }
+    .flow-card .icon {
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      background: var(--brand-light);
+      color: var(--brand-primary);
+      font-size: 18px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 0;
+    }
+    .flow-card .name { font-size: 15px; font-weight: 700; color: var(--text-main); }
+    .flow-card .desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* --------------------------------------------------------------------------
+       ANIMATIONS
+       -------------------------------------------------------------------------- */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeUp 0.4s var(--ease-out) forwards; }
+
+    /* Toast Notification (Apple Style) */
+    .toast-root {
+      position: fixed; right: 24px; bottom: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 12px;
+      pointer-events: none;
+    }
+    .toast {
+      min-width: 280px; padding: 16px;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.9); /* Dark glass */
+      backdrop-filter: blur(8px);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: flex-start; gap: 12px;
+      pointer-events: auto;
+      opacity: 0; transform: translateY(20px) scale(0.95);
+      transition: all 0.3s var(--ease-bounce);
+      font-size: 13px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+
+    /* Utilities */
+    .mono { font-family: var(--font-mono); font-size: 12px; color: #4B5563; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
+    
+    /* Responsive */
+    @media (max-width: 1200px){
+      .cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 860px){
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .cards { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .col-2, .col-3, .col-4, .col-6, .col-8, .col-9, .col-12 { grid-column: span 1; }
+      .topbar { padding: 0 16px; }
+      .content { padding: 16px; }
+    }
+  
+  /* ==== 项目执行情况报告 · 炫酷仪表盘样式增强 ==== */
+  .board-hero {
+    background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+    margin-bottom: 12px;
+  }
+  .board-hero-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .board-hero-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .board-hero-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .board-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(255,255,255,0.8);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .board-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--brand);
+  }
+  .kpi-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kpi-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .kpi-value {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .kpi-value input {
+    width: 100%;
+    border: none;
+    padding: 0;
+    font-size: 18px;
+    font-weight: 600;
+    background: transparent;
+  }
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .board-visual-grid {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.7fr;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .visual-card {
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    padding: 14px;
+    background: #ffffff;
+  }
+  .visual-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .visual-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    margin: 8px auto 0 auto;
+    position: relative;
+    box-sizing: border-box;
+    /* 简化为带颜色边框的示意环，确保所有浏览器都有可见效果 */
+    border: 10px solid rgba(37, 99, 235, 0.55); /* 品牌色外圈 */
+    box-shadow: 0 0 0 4px #e5e7eb inset;       /* 内侧浅灰圈，形成双色环效果 */
+    background-color: #ffffff;
+  }
+
+.ring-inner {
+    position: absolute;
+    inset: 18px;
+    border-radius: 999px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .ring-legend {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .gauge {
+    width: 100%;
+    height: 90px;
+    border-radius: 90px 90px 10px 10px;
+    /* 半圆彩色背景，用于示意进度从红->黄->绿的区间 */
+    background: radial-gradient(circle at 50% 100%, #fecaca 0, #fee2e2 25%, #fef9c3 45%, #dcfce7 65%, transparent 66%);
+    position: relative;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .gauge-overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -40%);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .gauge-caption {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .mini-bar-stack {
+    display: flex;
+    width: 100%;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #f3f4f6;
+    margin-top: 4px;
+  }
+  .mini-bar-stack span {
+    display: block;
+    height: 100%;
+  }
+  .mini-bar-budget {
+    background: rgba(59,130,246,0.35);
+    width: 60%;
+  }
+  .mini-bar-actual {
+    background: rgba(16,185,129,0.45);
+    width: 40%;
+  }
+  .mini-bar-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* 简易 Tab 导航，用于项目详情四个页签 */
+  .tab-nav {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #E5E7EB;
+    margin-bottom: 12px;
+  }
+  .tab-nav button {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: default;
+  }
+  .tab-nav button.active {
+    background: rgba(59,130,246,0.08);
+    color: var(--brand-deep);
+    font-weight: 600;
+  }
+  .tab-nav button.disabled {
+    opacity: 0.6;
+  }
+
+</style>
+</head>
+
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>MOM 一体化系统（原型）</h1>
+        <div class="muted" style="font-size:12px;">流程中心 · 项目管理</div>
+      </div>
+    </div>
+
+    <details class="nav-acc" open>
+      <summary>流程中心</summary>
+      <nav class="nav">
+        <a href="#/new-flow" data-route="new-flow" class="active"><span class="dot"></span> 新建流程</a>
+        <a href="#/my-requests" data-route="my-requests"><span class="dot"></span> 我的请求</a>
+        <a href="#/todo" data-route="todo"><span class="dot"></span> 待办任务</a>
+        <a href="#/done" data-route="done"><span class="dot"></span> 已办任务</a>
+        <a href="#/history" data-route="history"><span class="dot"></span> 历史任务</a>
+      </nav>
+    </details>
+
+    <details class="nav-acc" open>
+      <summary>项目管理</summary>
+      <nav class="nav">
+        <a href="#/project-list" data-route="project-list"><span class="dot"></span> 项目列表</a>
+        <a href="#/report" data-route="report"><span class="dot"></span> 项目执行情况报告</a>
+        <a href="#/purchase-plan" data-route="purchase-plan"><span class="dot"></span> 采购计划</a>
+      </nav>
+    </details>
+
+    <div style="margin-top:auto; padding:10px 10px;">
+      <div class="footer-note">说明：此为线框级 HTML 原型，用于对齐页面结构与字段。</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="crumbs" id="crumbs">流程中心 / 新建流程</div>
+      <div class="right">
+        <span class="pill">当前角色：<b id="roleName">项目经理</b></span>
+        <select id="roleSelect" class="pill" style="padding:6px 10px;">
+          <option value="pm" selected>项目经理</option>
+          <option value="techpm">技术/产品经理</option>
+          <option value="dept_pmo">部门PMO专员</option>
+          <option value="dept_head">部门负责人</option>
+          <option value="sales">销售/销售负责人</option>
+          <option value="finance">财务负责人/财务</option>
+          <option value="purchase">采购负责人/采购</option>
+          <option value="ops">项目运营负责人</option>
+          <option value="gm">总经理</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="content" id="view"></section>
+  </main>
+</div>
+
+<script>
+  // -----------------------------
+  // Minimal Router
+  // -----------------------------
+  const routes = {};
+  const view = document.getElementById('view');
+  const crumbs = document.getElementById('crumbs');
+
+  const roleSelect = document.getElementById('roleSelect');
+  const roleName = document.getElementById('roleName');
+  const roleLabels = {
+    pm: '项目经理',
+    techpm: '技术/产品经理',
+    dept_pmo: '部门PMO专员',
+    dept_head: '部门负责人',
+    sales: '销售/销售负责人',
+    finance: '财务负责人/财务',
+    purchase: '采购负责人/采购',
+    ops: '项目运营负责人',
+    gm: '总经理'
+  };
+  // -----------------------------
+  // Toast（右下角非阻塞提示）
+  // -----------------------------
+  function ensureToastRoot(){
+    let root = document.querySelector('.toast-root');
+    if(!root){
+      root = document.createElement('div');
+      root.className = 'toast-root';
+      document.body.appendChild(root);
+    }
+    return root;
+  }
+  function toast(message, type='info', subText=''){
+    const root = ensureToastRoot();
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `
+      <span class="dot" aria-hidden="true"></span>
+      <div class="msg">
+        <div>${String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        ${subText ? `<div class="sub">${String(subText).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+      </div>
+      <button class="x" type="button" aria-label="关闭">×</button>
+    `;
+    root.appendChild(el);
+    // show animation
+    requestAnimationFrame(() => el.classList.add('show'));
+    const close = () => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 180);
+    };
+    el.querySelector('.x')?.addEventListener('click', close);
+    // auto close
+    const t = setTimeout(close, 2400);
+    el.addEventListener('mouseenter', () => clearTimeout(t), {once:true});
+    return el;
+  }
+
+
+  function setActiveNav(route){
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.classList.toggle('active', a.dataset.route === route);
+    });
+  }
+
+  function render(html){
+    view.classList.remove('fade-in');
+    view.innerHTML = html;
+    // 不影响路由渲染：下一帧添加淡入类
+    requestAnimationFrame(() => view.classList.add('fade-in'));
+    bindCommon();
+  }
+
+  function bindCommon(){
+    // bind file validations for startup: 3 files and name contains keywords
+    const startupFile = document.getElementById('startupFiles');
+    const startupMsg = document.getElementById('startupFileMsg');
+    if(startupFile && startupMsg){
+      startupFile.addEventListener('change', () => {
+        const files = Array.from(startupFile.files || []);
+        const need = ['建设方案','预算表','签到表'];
+        const names = files.map(f => f.name);
+        const okCount = files.length === 3;
+        const okNames = need.every(k => names.some(n => n.includes(k)));
+        if(!files.length){
+          startupMsg.textContent = '未选择文件。提交前需上传3份：建设方案、预算表、签到表。';
+          startupMsg.className = 'hint';
+          return;
+        }
+        if(!okCount){
+          startupMsg.textContent = `文件数量不符合：当前 ${files.length}，要求 3 份。`;
+          startupMsg.className = 'hint';
+          startupMsg.style.color = '#b91c1c';
+          return;
+        }
+        if(!okNames){
+          startupMsg.textContent = '文件命名不符合：需分别包含“建设方案/预算表/签到表”关键字。';
+          startupMsg.className = 'hint';
+          startupMsg.style.color = '#b91c1c';
+          return;
+        }
+        startupMsg.textContent = '文件校验通过。';
+        startupMsg.className = 'hint';
+        startupMsg.style.color = '#166534';
+      });
+    }
+
+    // demo: submit buttons show toast-like alert
+    document.querySelectorAll('[data-action="save"]').forEach(btn => btn.addEventListener('click', () => toast('已保存。')));
+    document.querySelectorAll('[data-action="submit"]').forEach(btn => btn.addEventListener('click', () => toast('已提交进入审批。')));
+    document.querySelectorAll('[data-action="withdraw"]').forEach(btn => btn.addEventListener('click', () => toast('已撤回（原型演示，需满足“首节点未查看”条件）。')));
+    document.querySelectorAll('[data-action="back"]').forEach(btn => btn.addEventListener('click', () => location.hash = '#/new-flow'));
+  }
+
+  function route(path, title, fn){
+    routes[path] = {title, fn};
+  }
+
+  function navigate(){
+    const hash = location.hash || '#/new-flow';
+    const path = hash.replace('#','');
+    const r = routes[path];
+    const routeName = path.split('/')[1] || 'new-flow';
+    setActiveNav(routeName);
+
+    if(!r){
+      render(`<div class="card"><div class="card-body">未找到页面：${path}</div></div>`);
+      crumbs.textContent = '—';
+      return;
+    }
+    crumbs.textContent = r.title;
+    r.fn();
+  }
+
+  window.addEventListener('hashchange', navigate);
+
+  // role switch: purely UI demo (no real RBAC logic here)
+  roleSelect.addEventListener('change', () => {
+    roleName.textContent = roleLabels[roleSelect.value] || '—';
+    toast('已切换角色（原型演示）。权限与数据范围控制需由后端与权限中心实现。');
+  });
+
+  // -----------------------------
+  // Pages
+  // -----------------------------
+
+  route('/new-flow', '流程中心 / 新建流程', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">项目</div>
+            <div class="card-sub">点击卡片进入对应流程表单（线框原型）。</div>
+          </div>
+          <span class="tag save">入口页</span>
+        </div>
+        <div class="card-body">
+          <div class="notice">
+            提示：本页仅展示“项目类流程入口”。其他分类（财务/采购/人事/商务/其他）在此原型中省略。
+          </div>
+          <div style="height:12px;"></div>
+
+          <div class="cards">
+            <div class="flow-card" onclick="location.hash='#/flow/start'">
+              <div class="icon">启</div>
+              <div class="name">项目启动</div>
+              <div class="desc">填报项目基础信息、成本预算、里程碑计划，并上传启动文件（3份）。</div>
+            </div>
+            
+            <div class="flow-card" onclick="location.hash='#/flow/milestone-achieve'">
+              <div class="icon">达</div>
+              <div class="name">里程碑达成</div>
+              <div class="desc">提交里程碑实际达成信息，可一次提交多个里程碑并上传达成资料。</div>
+            </div>
+            <div class="flow-card" onclick="location.hash='#/flow/milestone-change'">
+              <div class="icon">改</div>
+              <div class="name">里程碑变更</div>
+              <div class="desc">调整里程碑计划达成时间（单次延迟不超过6个月）。</div>
+            </div>
+            <div class="flow-card" onclick="location.hash='#/flow/status-change'">
+              <div class="icon">态</div>
+              <div class="name">项目状态变更</div>
+              <div class="desc">挂起/解挂/作废等状态变更申请（规则按SRS）。</div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    `);
+  });
+
+  
+  route('/project-list', '项目管理 / 项目列表', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">项目列表</div>
+            <div class="card-sub">支持筛选（至少包含“项目类型”）、导出（示意）。</div>
+          </div>
+          <div class="row-actions">
+            <button>导出</button>
+            <button class="primary" onclick="location.hash='#/new-flow'">新建流程</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid">
+            <div class="field col-3">
+              <label>项目名称</label>
+              <input placeholder="输入关键字" />
+            </div>
+            <div class="field col-3">
+              <label>项目编号</label>
+              <input placeholder="例如：HT-2025-001" />
+            </div>
+            <div class="field col-3">
+              <label>项目类型</label>
+              <select>
+                <option value="">全部</option>
+                <option>集成(J)</option>
+                <option>开发(G)</option>
+                <option>研发(R)</option>
+                <option>框架(F)</option>
+                <option>咨询(Z)</option>
+                <option>维护(W)</option>
+              </select>
+            </div>
+            <div class="field col-3">
+              <label>项目状态</label>
+              <select>
+                <option value="">全部</option>
+                <option>未启动</option>
+                <option>实施</option>
+                <option>质保</option>
+                <option>待结束</option>
+                <option>结束</option>
+                <option>挂起</option>
+                <option>作废</option>
+              </select>
+            </div>
+            <div class="col-12 row-actions">
+              <button class="primary">查询</button>
+              <button>重置</button>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>项目名称</th>
+                  <th>项目编号</th>
+                  <th>项目类型</th>
+                  <th>项目经理</th>
+                  <th>开始时间</th>
+                  <th>结束时间</th>
+                  <th>项目状态</th>
+                  <th>核算状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="location.hash='#/project-detail'" style="cursor:pointer;">
+                  <td>（示例）XX项目</td>
+                  <td class="mono">HT-2025-001</td>
+                  <td>集成(J)</td>
+                  <td>张三</td>
+                  <td>2025-12-01</td>
+                  <td>2026-12-01</td>
+                  <td><span class="tag approving">实施</span></td>
+                  <td><span class="tag warning">未核算</span></td>
+                  <td>
+                    <button onclick="event.stopPropagation(); location.hash='#/report'">查看报告</button>
+                    <button onclick="event.stopPropagation(); location.hash='#/new-flow'">发起流程</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="9" class="muted">更多数据由后端提供（本原型不接入真实接口）。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    `);
+  });
+
+  
+route('/project-detail', '项目管理 / 项目详情', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">项目详情</div>
+            <div class="card-sub">示意：从项目列表点击某一行进入本页面，查看项目基础信息及风险问题清单。</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="tab-nav">
+            <button class="disabled">基本信息</button>
+            <button class="disabled">工时统计</button>
+            <button class="disabled">工时明细</button>
+            <button class="active">项目风险问题清单</button>
+          </div>
+
+          <div class="grid">
+            <div class="field col-3">
+              <label>项目名称</label>
+              <input readonly value="（示例）南网数字平台2024-2025年电网管理平台资产域项目" />
+            </div>
+            <div class="field col-3">
+              <label>项目编号</label>
+              <input readonly class="mono" value="HT-2025-001" />
+            </div>
+            <div class="field col-3">
+              <label>项目经理</label>
+              <input readonly value="鹿双丰" />
+            </div>
+            <div class="field col-3">
+              <label>整体风险等级</label>
+              <input readonly value="中（示意）" />
+            </div>
+          </div>
+
+          <div class="field col-12" style="margin-top:4px;">
+            <label>风险/问题统计概览</label>
+            <input readonly value="当前登记问题与风险 3 条，其中高风险 1 条、处理中 2 条、已关闭 1 条（示意）。" />
+          </div>
+
+          <div class="field col-12" style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+              <div class="field" style="min-width:160px;">
+                <label>关键字</label>
+                <input placeholder="按描述搜索问题/风险" />
+              </div>
+              <div class="field" style="min-width:140px;">
+                <label>类型</label>
+                <select>
+                  <option>全部</option>
+                  <option>问题</option>
+                  <option>风险</option>
+                </select>
+              </div>
+              <div class="field" style="min-width:140px;">
+                <label>等级/严重度</label>
+                <select>
+                  <option>全部</option>
+                  <option>高</option>
+                  <option>中</option>
+                  <option>低</option>
+                </select>
+              </div>
+              <div class="field" style="min-width:140px;">
+                <label>状态</label>
+                <select>
+                  <option>全部</option>
+                  <option>待处理</option>
+                  <option>处理中</option>
+                  <option>已关闭</option>
+                </select>
+              </div>
+              <div class="field" style="min-width:160px;">
+                <label>责任人</label>
+                <input placeholder="按责任人筛选" />
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:flex-end;">
+              <button class="btn-secondary">重置</button>
+              <button class="btn">查询</button>
+              <button class="btn" style="background:#10B981; border-color:#10B981;">导出清单</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:8px;">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">序号</th>
+                  <th style="width:80px;">类型</th>
+                  <th style="width:90px;">等级/严重度</th>
+                  <th>描述</th>
+                  <th style="width:100px;">责任人</th>
+                  <th style="width:120px;">计划关闭时间</th>
+                  <th style="width:90px;">状态</th>
+                  <th style="width:140px;">附件（文件名/数量）</th>
+                  <th style="width:80px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">1</td>
+                  <td>风险</td>
+                  <td><span class="tag rejected">高</span></td>
+                  <td>关键接口由第三方提供，交付计划存在不确定性。</td>
+                  <td>李四</td>
+                  <td>2026-03-15</td>
+                  <td><span class="tag warning">处理中</span></td>
+                  <td>接口对接方案v1.0.docx</td>
+                  <td class="muted">同步自启动流程</td>
+                </tr>
+                <tr>
+                  <td class="mono">2</td>
+                  <td>问题</td>
+                  <td><span class="tag approving">中</span></td>
+                  <td>用户侧关键业务流程需求多次变更，测试用例需要同步调整。</td>
+                  <td>赵六</td>
+                  <td>2026-05-01</td>
+                  <td><span class="tag warning">待处理</span></td>
+                  <td>需求变更记录表.xlsx</td>
+                  <td class="muted">同步自启动流程</td>
+                </tr>
+                <tr>
+                  <td class="mono">3</td>
+                  <td>问题</td>
+                  <td>低</td>
+                  <td>部分现场环境网络不稳定，远程运维效率受影响。</td>
+                  <td>现场负责人</td>
+                  <td>2026-08-10</td>
+                  <td><span class="tag archived">已关闭</span></td>
+                  <td>现场网络优化方案.pdf</td>
+                  <td><button class="btn-danger" style="border:none;background:none;color:#EF4444;cursor:pointer;padding:0;">删除</button></td>
+                </tr>
+                <tr>
+                  <td colspan="9" class="muted">说明：本清单字段与“项目启动流程 / E. 项目问题与风险录入”保持一一对应；其中“同步自启动流程”的记录仅支持查看，不允许删除；“新增问题/风险”可在本页执行删除操作，当前为线框示例。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="height:10px;"></div>
+          <button>+ 新增问题/风险</button>
+        </div>
+      </div>
+    `);
+  });
+route('/report', '项目管理 / 项目执行情况报告（只读）', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">项目执行情况报告（只读）</div>
+            <div class="card-sub">展示：回款进度 / 项目进度概览 / 里程碑用时对比 / 成本执行情况（线框示例）。</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <div class="health-pill health-good">
+              <span class="health-pill-dot"></span>
+              <span>综合健康度：良好</span>
+            </div>
+            <span class="tag archived">只读</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="notice warn">
+            说明：本页为线框原型，仅用于明确字段与口径。最终数据来源与接口以SRS为准。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          
+
+<!-- A. 项目执行炫酷概览 -->
+<div class="board-hero">
+  <div class="board-hero-header">
+    <div class="board-hero-title">A. 项目执行概览（仪表盘）</div>
+    <div class="board-hero-badges">
+      <span class="board-badge">
+        <span class="board-badge-dot" style="background:var(--brand);"></span>
+        回款 &amp; 进度
+      </span>
+      <span class="board-badge">
+        <span class="board-badge-dot" style="background:var(--ok);"></span>
+        里程碑 &amp; 成本
+      </span>
+      <span class="board-badge">
+        <span class="board-badge-dot" style="background:var(--warn);"></span>
+        偏差预警为线框占位
+      </span>
+    </div>
+  </div>
+
+  <!-- 顶部 4 个关键指标卡片 -->
+  <div class="kpi-grid-4">
+    <div class="kpi-card">
+      <div class="kpi-label">实际合同金额</div>
+      <div class="kpi-value"><input readonly id="rp_contractAmt" value="1,000,000.00" /></div>
+      <div class="kpi-sub">口径：销售合同（含税/不含税以SRS为准）。</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">累计回款金额</div>
+      <div class="kpi-value"><input readonly id="rp_paidAmt" value="350,000.00" /></div>
+      <div class="kpi-sub">口径：项目维度已到账回款合计。</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">回款进度</div>
+      <div class="kpi-value"><span id="rp_payPct">35.0%</span></div>
+      <div class="kpi-sub">累计回款金额 / 实际合同金额。</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">当前项目进度（累计完工比例）</div>
+      <div class="kpi-value"><input readonly id="rp_progressPct" value="25.0%" /></div>
+      <div class="kpi-sub">取最后一个“已达成”里程碑的累计完工比例。</div>
+    </div>
+  </div>
+
+  <!-- 中部 3 块可视化卡片 -->
+  <div class="board-visual-grid">
+    <!-- 回款进度环形图（线框） -->
+    <div class="visual-card">
+      <div class="visual-title">回款进度（环形图·线框）</div>
+      <div class="visual-sub">示意：以已回款金额/合同金额为比例，形成环形图占比。</div>
+      <div class="ring">
+        <div class="ring-inner"><span id="rp_payPct_ring">35.0%</span></div>
+      </div>
+      <div class="ring-legend">
+        提示：环形图为原型占位，实际由前端图表组件渲染；比例口径与顶部“回款进度”一致。
+      </div>
+    </div>
+
+    <!-- 项目进度 vs 计划（仪表盘·线框） -->
+    <div class="visual-card">
+      <div class="visual-title">项目进度 vs 计划（仪表盘·线框）</div>
+      <div class="visual-sub">示意：实际累计完工比例与线性计划进度的对比。</div>
+      <div class="gauge">
+        <div class="gauge-overlay"><span id="rp_progGaugeText">25.0%</span></div>
+      </div>
+      <div class="gauge-caption">
+        黄色竖线“计划位置”为线框示意，真实实现时由 rp_planMark 与图表组件联动。
+      </div>
+      <div class="grid" style="margin-top:8px;">
+        <div class="field col-6">
+          <label>进度偏差</label>
+          <input readonly id="rp_progressDev" value="滞后 10%" />
+        </div>
+        <div class="field col-6">
+          <label>剩余天数</label>
+          <input readonly id="rp_daysLeft" value="320" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 成本执行概览（堆叠条形·线框） -->
+    <div class="visual-card">
+      <div class="visual-title">成本执行概览（堆叠条形·线框）</div>
+      <div class="visual-sub">示意：预算 vs 实际，用一条堆叠条形展示占比关系。</div>
+      <div class="mini-bar-stack">
+        <span class="mini-bar-budget"></span>
+        <span class="mini-bar-actual"></span>
+      </div>
+      <div class="mini-bar-legend">
+        <span>蓝色：预算</span>
+        <span>绿色：实际</span>
+      </div>
+      <div class="grid" style="margin-top:8px;">
+        <div class="field col-12">
+          <label>整体成本执行说明</label>
+          <input readonly id="rp_costExecHint" value="示例：整体执行率 92%，成本在可控范围内（线框文案）。" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:12px;"></div>
+<!-- C. 里程碑预计用时 vs 实际用时 -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">B. 项目里程碑预计用时与实际用时（柱状图·线框）</div></div>
+            <div class="card-body">
+              <div class="notice">
+                说明：柱状图口径（线框示例）：预计用时=计划达成日期-项目开始日期；实际用时=实际达成日期-项目开始日期（未达成则实际为空）。
+              </div>
+              <div style="height:10px;"></div>
+
+              <div id="rp_milestoneBars" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="border:1px solid var(--line); border-radius:12px; padding:10px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div style="font-weight:700;">立项</div>
+                    <div class="muted" style="font-size:12px;">预计 10 天 · 实际 9 天</div>
+                  </div>
+                  <div style="height:8px;"></div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div class="muted" style="font-size:12px; width:40px;">预计</div>
+                      <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:25%; background:var(--brand);"></div>
+                      </div>
+                      <div class="mono" style="font-size:12px; width:58px; text-align:right;">10</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div class="muted" style="font-size:12px; width:40px;">实际</div>
+                      <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:22%; background:var(--ok);"></div>
+                      </div>
+                      <div class="mono" style="font-size:12px; width:58px; text-align:right;">9</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="border:1px solid var(--line); border-radius:12px; padding:10px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div style="font-weight:700;">方案评审</div>
+                    <div class="muted" style="font-size:12px;">预计 50 天 · 实际 48 天</div>
+                  </div>
+                  <div style="height:8px;"></div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div class="muted" style="font-size:12px; width:40px;">预计</div>
+                      <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:60%; background:var(--brand);"></div>
+                      </div>
+                      <div class="mono" style="font-size:12px; width:58px; text-align:right;">50</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <div class="muted" style="font-size:12px; width:40px;">实际</div>
+                      <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:58%; background:var(--ok);"></div>
+                      </div>
+                      <div class="mono" style="font-size:12px; width:58px; text-align:right;">48</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:10px;"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>里程碑</th>
+                      <th>计划达成日期</th>
+                      <th>实际达成日期</th>
+                      <th>预计用时（天）</th>
+                      <th>实际用时（天）</th>
+                      <th>累计完工比例</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rp_milestoneTable">
+                    <tr>
+                      <td>立项</td>
+                      <td>2025-12-10</td>
+                      <td>2025-12-12</td>
+                      <td>10</td>
+                      <td>9</td>
+                      <td>10%</td>
+                      <td>已达成</td>
+                    </tr>
+                    <tr>
+                      <td>方案评审</td>
+                      <td>2026-01-20</td>
+                      <td>2026-01-18</td>
+                      <td>50</td>
+                      <td>48</td>
+                      <td>25%</td>
+                      <td>已达成</td>
+                    </tr>
+                    <tr>
+                      <td>上线试运行</td>
+                      <td>2026-04-15</td>
+                      <td>—</td>
+                      <td>120</td>
+                      <td>—</td>
+                      <td>60%</td>
+                      <td>未达成</td>
+                    </tr>
+                    <tr>
+                      <td>验收</td>
+                      <td>2026-10-15</td>
+                      <td>—</td>
+                      <td>300</td>
+                      <td>—</td>
+                      <td>100%</td>
+                      <td>未达成</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- D. 成本执行情况 -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">D. 成本执行情况</div></div>
+            <div class="card-body">
+              <div class="notice">
+                执行情况=实际/预算。状态：&lt;80%：良好；80%~100%：预警；&gt;100%：超支。
+              </div>
+              <div style="height:10px;"></div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>成本类型</th>
+                      <th>预算</th>
+                      <th>实际</th>
+                      <th>执行情况</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rp_costTable">
+                    <tr>
+                      <td>人工成本</td>
+                      <td>380,000.00</td>
+                      <td>420,000.00</td>
+                      <td>110.5%</td>
+                      <td><span class="tag rejected">超支</span></td>
+                    </tr>
+                    <tr>
+                      <td>报销费用</td>
+                      <td>50,000.00</td>
+                      <td>42,000.00</td>
+                      <td>84.0%</td>
+                      <td><span class="tag archived">良好</span></td>
+                    </tr>
+                    <tr>
+                      <td>采购费用</td>
+                      <td>80,000.00</td>
+                      <td>90,000.00</td>
+                      <td>112.5%</td>
+                      <td><span class="tag rejected">超支</span></td>
+                    </tr>
+                    <tr>
+                      <td>不可预见费用</td>
+                      <td>30,000.00</td>
+                      <td>12,000.00</td>
+                      <td>40.0%</td>
+                      <td><span class="tag archived">良好</span></td>
+                    </tr>
+                    <tr>
+                      <td>项目交付团队成本</td>
+                      <td>300,000.00</td>
+                      <td>264,000.00</td>
+                      <td>88.0%</td>
+                      <td><span class="tag approving">预警</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="hint">
+                字段映射说明（来自你提供的口径）：<br/>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+
+    // -----------------------------
+    // 线框示例数据 & 口径计算（不影响其他页面）
+    // -----------------------------
+    (function(){
+      const data = {
+        project: {
+          status: '实施', // 实施/质保/挂起/待结束/结束/作废（示例）
+          startDate: '2025-12-01',
+          endDate: '2026-12-01'
+        },
+        finance: {
+          contractAmt: 1000000,
+          paidAmt: 350000
+        },
+        // 里程碑：cumPct=累计完工比例（用于“当前进度”）
+        milestones: [
+          { name:'立项', planDate:'2025-12-10', actualDate:'2025-12-12', cumPct: 10, done:true },
+          { name:'方案评审', planDate:'2026-01-20', actualDate:'2026-01-18', cumPct: 25, done:true },
+          { name:'上线试运行', planDate:'2026-04-15', actualDate:null,          cumPct: 60, done:false },
+          { name:'验收', planDate:'2026-10-15', actualDate:null,          cumPct: 100, done:false }
+        ],
+        // 成本示例：用于演示执行情况与状态
+        cost: [
+          { type:'人工成本', budget:220000, actual:120000 },
+          { type:'报销费用', budget: 50000, actual: 42000 },
+          { type:'采购费用', budget: 80000, actual: 90000 },
+          { type:'不可预见费用', budget: 30000, actual: 12000 },
+          { type:'项目交付团队成本', budget:300000, actual:264000 }
+        ]
+      };
+
+      const $ = (id)=>document.getElementById(id);
+      if(!$('rp_contractAmt')) return; // 防御：避免非本页执行
+
+      // 回款进度
+      const contractAmt = Number(data.finance.contractAmt || 0);
+      const paidAmt = Number(data.finance.paidAmt || 0);
+      const payPct = contractAmt > 0 ? (paidAmt / contractAmt) : 0;
+      $('rp_contractAmt').value = contractAmt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+      $('rp_paidAmt').value = paidAmt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+      $('rp_payPct').textContent = (payPct*100).toFixed(1) + '%';
+      $('rp_payBar').style.width = Math.min(100, Math.max(0, payPct*100)) + '%';
+
+      // 当前进度：取最后一个达成里程碑的累计完工比例
+      const doneList = (data.milestones||[]).filter(m=>m.done && m.actualDate);
+      const lastDone = doneList.length ? doneList.sort((a,b)=>a.actualDate.localeCompare(b.actualDate)).slice(-1)[0] : null;
+      const actualCum = lastDone ? Number(lastDone.cumPct || 0) : 0;
+
+      $('rp_progressPct').value = actualCum.toFixed(0) + '%';
+      $('rp_progBarText').textContent = actualCum.toFixed(0) + '%';
+      $('rp_progBar').style.width = Math.min(100, Math.max(0, actualCum)) + '%';
+
+      // 计划累计完工比例（线框示例：线性计划）
+      const today = new Date();
+      const start = new Date(data.project.startDate + 'T00:00:00');
+      const end = new Date(data.project.endDate + 'T00:00:00');
+      const span = Math.max(1, end - start);
+      const elapsed = Math.min(span, Math.max(0, today - start));
+      const planCum = (elapsed / span) * 100;
+      $('rp_planMark').style.left = Math.min(100, Math.max(0, planCum)) + '%';
+
+      // 进度偏差：计划-实际
+      const dev = planCum - actualCum;
+      $('rp_progressDev').value = (dev>=0?'+':'') + dev.toFixed(1) + 'pp';
+
+      // 剩余天数：按你给的状态口径
+      function daysBetween(a,b){
+        const ms = (b - a);
+        return Math.ceil(ms / (1000*60*60*24));
+      }
+      const activeSet = new Set(['实施','质保','挂起']);
+      let daysLeft = 0;
+      if(activeSet.has(String(data.project.status))){
+        daysLeft = daysBetween(today, end);
+      }else{
+        const lastActualDate = (lastDone && lastDone.actualDate) ? new Date(lastDone.actualDate + 'T00:00:00') : today;
+        daysLeft = daysBetween(lastActualDate, end);
+      }
+      $('rp_daysLeft').value = (isFinite(daysLeft) ? daysLeft : 0) + ' 天';
+
+      // 里程碑用时：柱状条形（线框）
+      const bars = document.getElementById('rp_milestoneBars');
+      const tbody = document.getElementById('rp_milestoneTable');
+
+      function dateOrNull(s){ return s ? new Date(s + 'T00:00:00') : null; }
+      const maxDays = Math.max(30, ...(data.milestones||[]).map(m=>{
+        const pd = dateOrNull(m.planDate);
+        const ad = dateOrNull(m.actualDate);
+        const exp = pd ? Math.max(0, daysBetween(start, pd)) : 0;
+        const act = ad ? Math.max(0, daysBetween(start, ad)) : 0;
+        return Math.max(exp, act);
+      }));
+
+      function barRow(label, expDays, actDays, done){
+        const expW = (expDays / maxDays) * 100;
+        const actW = (actDays / maxDays) * 100;
+        const actText = done ? actDays : '—';
+        const actBarW = done ? actW : 0;
+        return `
+          <div style="border:1px solid var(--line); border-radius:12px; padding:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="font-weight:700;">${label}</div>
+              <div class="muted" style="font-size:12px;">预计 ${expDays} 天 · 实际 ${actText} 天</div>
+            </div>
+            <div style="height:8px;"></div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="muted" style="font-size:12px; width:40px;">预计</div>
+                <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                  <div style="height:100%; width:${expW}%; background:var(--brand);"></div>
+                </div>
+                <div class="mono" style="font-size:12px; width:58px; text-align:right;">${expDays}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="muted" style="font-size:12px; width:40px;">实际</div>
+                <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                  <div style="height:100%; width:${actBarW}%; background:var(--ok);"></div>
+                </div>
+                <div class="mono" style="font-size:12px; width:58px; text-align:right;">${actText}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      (data.milestones||[]).forEach(m=>{
+        const pd = dateOrNull(m.planDate);
+        const ad = dateOrNull(m.actualDate);
+        const expDays = pd ? Math.max(0, daysBetween(start, pd)) : 0;
+        const actDays = ad ? Math.max(0, daysBetween(start, ad)) : 0;
+
+        bars.insertAdjacentHTML('beforeend', barRow(m.name, expDays, actDays, !!m.done));
+
+        const state = m.done ? '<span class="tag archived">已达成</span>' : '<span class="tag save">未达成</span>';
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${m.name}</td>
+            <td>${m.planDate || '—'}</td>
+            <td>${m.actualDate || '—'}</td>
+            <td>${expDays}</td>
+            <td>${m.done ? actDays : '—'}</td>
+            <td>${(Number(m.cumPct||0)).toFixed(0)}%</td>
+            <td>${state}</td>
+          </tr>
+        `);
+      });
+
+      // 成本执行情况表
+      function statusLabel(exec){
+        if(!isFinite(exec)) return {text:'—', cls:'save'};
+        if(exec < 0.8) return {text:'良好', cls:'archived'};
+        if(exec <= 1.0) return {text:'预警', cls:'approving'};
+        return {text:'超支', cls:'rejected'};
+      }
+
+      const costBody = document.getElementById('rp_costTable');
+      (data.cost||[]).forEach(r=>{
+        const b = Number(r.budget || 0);
+        const a = Number(r.actual || 0);
+        const exec = b > 0 ? (a / b) : NaN;
+        const st = statusLabel(exec);
+        costBody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${r.type}</td>
+            <td>${b.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td>${a.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td>${isFinite(exec)?(exec*100).toFixed(1)+'%':'—'}</td>
+            <td><span class="tag ${st.cls}">${st.text}</span></td>
+          </tr>
+        `);
+      });
+    })();
+  });
+
+  route('/purchase-plan', '项目管理 / 采购计划（线框）', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">采购计划</div>
+            <div class="card-sub">数据来源：MOM平台 · 新建流程 · 采购申请（本页仅占位）。</div>
+          </div>
+          <button class="primary" onclick="location.hash='#/new-flow'">新建流程</button>
+        </div>
+        <div class="card-body">
+          <div class="notice warn">
+            入口位置与“按项目过滤采购申请”的规则需按SRS进一步明确。此处提供最小可用结构：筛选 + 列表 + 跳转。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="grid">
+            <div class="field col-4"><label>项目编号</label><input placeholder="HT-2025-001" /></div>
+            <div class="field col-4"><label>采购申请单号</label><input placeholder="输入关键字" /></div>
+            <div class="field col-4"><label>状态</label>
+              <select>
+                <option value="">全部</option>
+                <option>审批中</option>
+                <option>已归档</option>
+                <option>已驳回</option>
+              </select>
+            </div>
+            <div class="col-12 row-actions">
+              <button class="primary">查询</button><button>重置</button>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>采购申请单号</th>
+                  <th>项目编号</th>
+                  <th>申请人</th>
+                  <th>申请日期</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">PO-2025-0001</td>
+                  <td class="mono">HT-2025-001</td>
+                  <td>张三</td>
+                  <td>2025-12-10</td>
+                  <td>—</td>
+                  <td><span class="tag approving">审批中</span></td>
+                  <td><button>打开采购申请</button></td>
+                </tr>
+                <tr><td colspan="7" class="muted">更多数据由采购系统提供（原型占位）。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    <!-- C. 成本执行情况 -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">C. 成本执行情况</div></div>
+            <div class="card-body">
+              <div class="notice">
+                执行情况=实际/预算。状态：&lt;80%：良好；80%~100%：预警；&gt;100%：超支。
+              </div>
+              <div style="height:10px;"></div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>成本类型</th>
+                      <th>预算</th>
+                      <th>实际</th>
+                      <th>执行情况</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rp_costTable">
+                    <tr>
+                      <td>人工成本</td>
+                      <td>380,000.00</td>
+                      <td>420,000.00</td>
+                      <td>110.5%</td>
+                      <td><span class="tag rejected">超支</span></td>
+                    </tr>
+                    <tr>
+                      <td>报销费用</td>
+                      <td>50,000.00</td>
+                      <td>42,000.00</td>
+                      <td>84.0%</td>
+                      <td><span class="tag archived">良好</span></td>
+                    </tr>
+                    <tr>
+                      <td>采购费用</td>
+                      <td>80,000.00</td>
+                      <td>90,000.00</td>
+                      <td>112.5%</td>
+                      <td><span class="tag rejected">超支</span></td>
+                    </tr>
+                    <tr>
+                      <td>不可预见费用</td>
+                      <td>30,000.00</td>
+                      <td>12,000.00</td>
+                      <td>40.0%</td>
+                      <td><span class="tag archived">良好</span></td>
+                    </tr>
+                    <tr>
+                      <td>项目交付团队成本</td>
+                      <td>300,000.00</td>
+                      <td>264,000.00</td>
+                      <td>88.0%</td>
+                      <td><span class="tag approving">预警</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="hint">
+                字段映射说明（来自你提供的口径）：<br/>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+
+    // -----------------------------
+    // 线框示例数据 & 口径计算（不影响其他页面）
+    // -----------------------------
+    (function(){
+      const data = {
+        project: {
+          status: '实施', // 实施/质保/挂起/待结束/结束/作废（示例）
+          startDate: '2025-12-01',
+          endDate: '2026-12-01'
+        },
+        finance: {
+          contractAmt: 1000000,
+          paidAmt: 350000
+        },
+        // 里程碑：cumPct=累计完工比例（用于“当前进度”）
+        milestones: [
+          { name:'立项', planDate:'2025-12-10', actualDate:'2025-12-12', cumPct: 10, done:true },
+          { name:'方案评审', planDate:'2026-01-20', actualDate:'2026-01-18', cumPct: 25, done:true },
+          { name:'上线试运行', planDate:'2026-04-15', actualDate:null,          cumPct: 60, done:false },
+          { name:'验收', planDate:'2026-10-15', actualDate:null,          cumPct: 100, done:false }
+        ],
+        // 成本示例：用于演示执行情况与状态
+        cost: [
+          { type:'人工成本', budget:220000, actual:120000 },
+          { type:'报销费用', budget: 50000, actual: 42000 },
+          { type:'采购费用', budget: 80000, actual: 90000 },
+          { type:'不可预见费用', budget: 30000, actual: 12000 },
+          { type:'项目交付团队成本', budget:300000, actual:264000 }
+        ]
+      };
+
+      const $ = (id)=>document.getElementById(id);
+      if(!$('rp_contractAmt')) return; // 防御：避免非本页执行
+
+      // 回款进度
+      const contractAmt = Number(data.finance.contractAmt || 0);
+      const paidAmt = Number(data.finance.paidAmt || 0);
+      const payPct = contractAmt > 0 ? (paidAmt / contractAmt) : 0;
+      $('rp_contractAmt').value = contractAmt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+      $('rp_paidAmt').value = paidAmt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+      $('rp_payPct').textContent = (payPct*100).toFixed(1) + '%';
+      $('rp_payBar').style.width = Math.min(100, Math.max(0, payPct*100)) + '%';
+
+      // 当前进度：取最后一个达成里程碑的累计完工比例
+      const doneList = (data.milestones||[]).filter(m=>m.done && m.actualDate);
+      const lastDone = doneList.length ? doneList.sort((a,b)=>a.actualDate.localeCompare(b.actualDate)).slice(-1)[0] : null;
+      const actualCum = lastDone ? Number(lastDone.cumPct || 0) : 0;
+
+      $('rp_progressPct').value = actualCum.toFixed(0) + '%';
+      $('rp_progBarText').textContent = actualCum.toFixed(0) + '%';
+      $('rp_progBar').style.width = Math.min(100, Math.max(0, actualCum)) + '%';
+
+      // 计划累计完工比例（线框示例：线性计划）
+      const today = new Date();
+      const start = new Date(data.project.startDate + 'T00:00:00');
+      const end = new Date(data.project.endDate + 'T00:00:00');
+      const span = Math.max(1, end - start);
+      const elapsed = Math.min(span, Math.max(0, today - start));
+      const planCum = (elapsed / span) * 100;
+      $('rp_planMark').style.left = Math.min(100, Math.max(0, planCum)) + '%';
+
+      // 进度偏差：计划-实际
+      const dev = planCum - actualCum;
+      $('rp_progressDev').value = (dev>=0?'+':'') + dev.toFixed(1) + 'pp';
+
+      // 剩余天数：按你给的状态口径
+      function daysBetween(a,b){
+        const ms = (b - a);
+        return Math.ceil(ms / (1000*60*60*24));
+      }
+      const activeSet = new Set(['实施','质保','挂起']);
+      let daysLeft = 0;
+      if(activeSet.has(String(data.project.status))){
+        daysLeft = daysBetween(today, end);
+      }else{
+        const lastActualDate = (lastDone && lastDone.actualDate) ? new Date(lastDone.actualDate + 'T00:00:00') : today;
+        daysLeft = daysBetween(lastActualDate, end);
+      }
+      $('rp_daysLeft').value = (isFinite(daysLeft) ? daysLeft : 0) + ' 天';
+
+      // 里程碑用时：柱状条形（线框）
+      const bars = document.getElementById('rp_milestoneBars');
+      const tbody = document.getElementById('rp_milestoneTable');
+
+      function dateOrNull(s){ return s ? new Date(s + 'T00:00:00') : null; }
+      const maxDays = Math.max(30, ...(data.milestones||[]).map(m=>{
+        const pd = dateOrNull(m.planDate);
+        const ad = dateOrNull(m.actualDate);
+        const exp = pd ? Math.max(0, daysBetween(start, pd)) : 0;
+        const act = ad ? Math.max(0, daysBetween(start, ad)) : 0;
+        return Math.max(exp, act);
+      }));
+
+      function barRow(label, expDays, actDays, done){
+        const expW = (expDays / maxDays) * 100;
+        const actW = (actDays / maxDays) * 100;
+        const actText = done ? actDays : '—';
+        const actBarW = done ? actW : 0;
+        return `
+          <div style="border:1px solid var(--line); border-radius:12px; padding:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="font-weight:700;">${label}</div>
+              <div class="muted" style="font-size:12px;">预计 ${expDays} 天 · 实际 ${actText} 天</div>
+            </div>
+            <div style="height:8px;"></div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="muted" style="font-size:12px; width:40px;">预计</div>
+                <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                  <div style="height:100%; width:${expW}%; background:var(--brand);"></div>
+                </div>
+                <div class="mono" style="font-size:12px; width:58px; text-align:right;">${expDays}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="muted" style="font-size:12px; width:40px;">实际</div>
+                <div style="flex:1; height:10px; background:#f3f4f6; border-radius:999px; overflow:hidden;">
+                  <div style="height:100%; width:${actBarW}%; background:var(--ok);"></div>
+                </div>
+                <div class="mono" style="font-size:12px; width:58px; text-align:right;">${actText}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      (data.milestones||[]).forEach(m=>{
+        const pd = dateOrNull(m.planDate);
+        const ad = dateOrNull(m.actualDate);
+        const expDays = pd ? Math.max(0, daysBetween(start, pd)) : 0;
+        const actDays = ad ? Math.max(0, daysBetween(start, ad)) : 0;
+
+        bars.insertAdjacentHTML('beforeend', barRow(m.name, expDays, actDays, !!m.done));
+
+        const state = m.done ? '<span class="tag archived">已达成</span>' : '<span class="tag save">未达成</span>';
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${m.name}</td>
+            <td>${m.planDate || '—'}</td>
+            <td>${m.actualDate || '—'}</td>
+            <td>${expDays}</td>
+            <td>${m.done ? actDays : '—'}</td>
+            <td>${(Number(m.cumPct||0)).toFixed(0)}%</td>
+            <td>${state}</td>
+          </tr>
+        `);
+      });
+
+      // 成本执行情况表
+      function statusLabel(exec){
+        if(!isFinite(exec)) return {text:'—', cls:'save'};
+        if(exec < 0.8) return {text:'良好', cls:'archived'};
+        if(exec <= 1.0) return {text:'预警', cls:'approving'};
+        return {text:'超支', cls:'rejected'};
+      }
+
+      const costBody = document.getElementById('rp_costTable');
+      (data.cost||[]).forEach(r=>{
+        const b = Number(r.budget || 0);
+        const a = Number(r.actual || 0);
+        const exec = b > 0 ? (a / b) : NaN;
+        const st = statusLabel(exec);
+        costBody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${r.type}</td>
+            <td>${b.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td>${a.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td>${isFinite(exec)?(exec*100).toFixed(1)+'%':'—'}</td>
+            <td><span class="tag ${st.cls}">${st.text}</span></td>
+          </tr>
+        `);
+      });
+    })();
+  });
+
+  route('/purchase-plan', '项目管理 / 采购计划（线框）', () => {
+    render(`
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">采购计划</div>
+            <div class="card-sub">数据来源：MOM平台 · 新建流程 · 采购申请（本页仅占位）。</div>
+          </div>
+          <button class="primary" onclick="location.hash='#/new-flow'">新建流程</button>
+        </div>
+        <div class="card-body">
+          <div class="notice warn">
+            入口位置与“按项目过滤采购申请”的规则需按SRS进一步明确。此处提供最小可用结构：筛选 + 列表 + 跳转。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="grid">
+            <div class="field col-4"><label>项目编号</label><input placeholder="HT-2025-001" /></div>
+            <div class="field col-4"><label>采购申请单号</label><input placeholder="输入关键字" /></div>
+            <div class="field col-4"><label>状态</label>
+              <select>
+                <option value="">全部</option>
+                <option>审批中</option>
+                <option>已归档</option>
+                <option>已驳回</option>
+              </select>
+            </div>
+            <div class="col-12 row-actions">
+              <button class="primary">查询</button><button>重置</button>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>采购申请单号</th>
+                  <th>项目编号</th>
+                  <th>申请人</th>
+                  <th>申请日期</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">PO-2025-0001</td>
+                  <td class="mono">HT-2025-001</td>
+                  <td>张三</td>
+                  <td>2025-12-10</td>
+                  <td>—</td>
+                  <td><span class="tag approving">审批中</span></td>
+                  <td><button>打开采购申请</button></td>
+                </tr>
+                <tr><td colspan="7" class="muted">更多数据由采购系统提供（原型占位）。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `);
+  });
+
+  // Generic placeholders for inbox pages
+  route('/my-requests', '流程中心 / 我的请求（占位）', () => render(`<div class="card"><div class="card-body">占位：我的请求列表（后续可复用列表通用能力）。</div></div>`));
+  route('/todo', '流程中心 / 待办任务（占位）', () => render(`<div class="card"><div class="card-body">占位：待办任务列表。</div></div>`));
+  route('/done', '流程中心 / 已办任务（占位）', () => render(`<div class="card"><div class="card-body">占位：已办任务列表。</div></div>`));
+  route('/history', '流程中心 / 历史任务（占位）', () => render(`<div class="card"><div class="card-body">占位：历史任务列表。</div></div>`));
+
+  // -----------------------------
+  // Flow Forms
+  // -----------------------------
+
+  function flowHeader(title, statusTag='save'){
+    const map = {
+      save: ['保存状态','save'],
+      approving: ['审批中','approving'],
+      rejected: ['已驳回','rejected'],
+      archived: ['已归档','archived']
+    };
+    const [txt, cls] = map[statusTag] || map.save;
+    return `
+      <div class="card-header">
+        <div>
+          <div class="card-title">${title}</div>
+          <div class="card-sub">线框原型：字段、布局、操作按钮（规则仅实现部分示意）。</div>
+        </div>
+        <div class="row-actions">
+          <span class="tag ${cls}">${txt}</span>
+          <button data-action="save">保存</button>
+          <button class="primary" data-action="submit">提交</button>
+          <button class="danger" data-action="withdraw" disabled>撤回</button>
+          <button data-action="back">返回</button>
+        </div>
+      </div>
+    `;
+  }
+
+  route('/flow/start', '流程中心 / 新建流程 / 项目启动', () => {
+    render(`
+      <div class="card">
+        ${flowHeader('项目启动流程表单', 'save')}
+        <div class="card-body">
+          <div class="notice">
+            必填提示：本页分区包含：基础信息 / 项目成本预算 / 项目里程碑计划 / 里程碑清单 / 项目问题与风险录入 / 项目启动文件上传。关键校验：启动文件需上传3份（建设方案/预算表/签到表）。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">A. 基础信息</div></div>
+            <div class="card-body">
+              <div class="grid">
+                <div class="field col-3">
+                  <label>申请人 <span class="req">*</span></label>
+                  <input value="（当前登录用户）" readonly />
+                </div>
+                <div class="field col-3">
+                  <label>申请日期 <span class="req">*</span></label>
+                  <input type="date" />
+                </div>
+                <div class="field col-6">
+                  <label>项目名称 <span class="req">*</span></label>
+                  <input placeholder="选择/搜索销售合同项目名称（原型用输入框代替）" />
+                  <div class="hint">选择后应自动带出项目编号与合同信息（原型不接入接口）。</div>
+                </div>
+
+                <div class="field col-3">
+                  <label>项目编号 <span class="req">*</span></label>
+                  <input value="（自动带出）" readonly />
+                  <div class="hint">点击跳转销售合同（高保真阶段实现）。</div>
+                </div>
+                <div class="field col-3">
+                  <label>申请部门 <span class="req">*</span></label>
+                  <input value="（自动带出）" readonly />
+                </div>
+                <div class="field col-3">
+                  <label>项目经理 <span class="req">*</span></label>
+                  <input placeholder="人员选择" />
+                </div>
+                <div class="field col-3">
+                  <label>技术/产品经理 <span class="req">*</span></label>
+                  <input placeholder="人员选择" />
+                </div>
+
+                <div class="field col-3">
+                  <label>部门PMO专员 <span class="req">*</span></label>
+                  <input placeholder="人员选择（需同部门）" />
+                </div>
+                <div class="field col-3">
+                  <label>财务人员 <span class="req">*</span></label>
+                  <input placeholder="人员选择" />
+                </div>
+                <div class="field col-3">
+                  <label>采购人员 <span class="req">*</span></label>
+                  <input placeholder="人员选择" />
+                </div>
+                <div class="field col-3">
+                  <label>是否有开发过程 <span class="req">*</span></label>
+                  <select><option>是</option><option>否</option></select>
+                </div>
+
+                <div class="field col-3">
+                  <label>项目状态 <span class="req">*</span></label>
+                  <select>
+                    <option selected>实施</option>
+                    <option>质保</option>
+                    <option>待结束</option>
+                    <option>结束</option>
+                    <option>挂起</option>
+                    <option>作废</option>
+                  </select>
+                  <div class="hint">按SRS：启动流程原则上只允许选择“实施”。</div>
+                </div>
+                <div class="field col-3">
+                  <label>项目开始时间 <span class="req">*</span></label>
+                  <input type="date" />
+                  <div class="hint">按SRS：取启动会签到表日期。</div>
+                </div>
+                <div class="field col-3">
+                  <label>项目结束时间 <span class="req">*</span></label>
+                  <input type="date" />
+                  <div class="hint">按SRS：合同规定完结期限（含质保期）。</div>
+                </div>
+                <div class="field col-3">
+                  <label>包含软件和硬件 <span class="req">*</span></label>
+                  <select><option>是</option><option>否</option></select>
+                </div>
+
+                <div class="field col-4">
+                  <label>本项目启动部分 <span class="req">*</span></label>
+                  <select>
+                    <option>软件</option><option>硬件</option><option>软硬件</option>
+                  </select>
+                </div>
+                <div class="field col-4">
+                  <label>项目类型（合同带出）</label>
+                  <input value="（自动带出：J/G/R/F/Z/W）" readonly />
+                </div>
+                <div class="field col-4">
+                  <label>销售（合同带出）</label>
+                  <input value="（自动带出）" readonly />
+                </div>
+
+                <div class="field col-12">
+                  <label>合同信息（带出展示区）</label>
+                  <textarea readonly placeholder="占位：合同签订时间/甲方/联系人/金额/毛利率/是否框架合同等由销售合同系统带出。"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">B. 项目成本预算</div></div>
+            <div class="card-body">
+              <div class="grid">
+                <div class="field col-3">
+                  <label>人工成本预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="0.00" />
+                </div>
+                <div class="field col-3">
+                  <label>当前人工成本</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+
+                <div class="field col-3">
+                  <label>交付不可预见费用预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="0.00" />
+                </div>
+                <div class="field col-3">
+                  <label>当前交付不可预见费用</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+                <div class="field col-3">
+                  <label>采购费用预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="0.00" />
+                </div>
+                <div class="field col-3">
+                  <label>当前采购费用</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+
+                <div class="field col-4">
+                  <label>项目交付团队成本预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="=人工+报销+交付不可预见（按SRS口径）" />
+                </div>
+                <div class="field col-4">
+                  <label>当前项目交付团队成本</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+                <div class="field col-4">
+                  <label>交付团队成本执行情况</label>
+                  <input readonly value="（系统计算：当前/预算）" />
+                </div>
+
+                <div class="field col-4">
+                  <label>合计成本预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="=人工+报销+采购+交付不可预见" />
+                </div>
+                <div class="field col-4">
+                  <label>当前合计成本</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+                <div class="field col-4">
+                  <label>合计成本执行情况</label>
+                  <input readonly value="（系统计算）" />
+                </div>
+
+                <div class="field col-6">
+                  <label>工作量预算 <span class="req">*</span></label>
+                  <input type="number" placeholder="小时/人天（口径按SRS）" />
+                </div>
+                <div class="field col-6">
+                  <label>当前工作量</label>
+                  <input readonly value="（系统计算：交付团队工时）" />
+                </div>
+
+                <div class="col-12">
+                  <div class="notice">
+                    阈值提示（按SRS）：执行情况≥80%预警；≥90%预警并高亮；≥110%系统强制挂起并停止报工/报销（具体通知实现由后端完成）。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">C. 项目计划</div></div>
+            <div class="card-body">
+              <div class="notice warn">
+                说明：本区用于“里程碑计划视图/计划说明”的录入与展示（线框占位）。字段与规则以SRS最终确认为准。
+              </div>
+              <div style="height:10px;"></div>
+              <div class="grid">
+                <div class="field col-4">
+                  <label>计划版本【建议】</label>
+                  <input placeholder="例如：V1 / 2025-12-15" />
+                </div>
+                <div class="field col-4">
+                  <label>计划开始时间【建议】</label>
+                  <input type="date" />
+                </div>
+                <div class="field col-4">
+                  <label>计划结束时间【建议】</label>
+                  <input type="date" />
+                </div>
+                <div class="field col-12">
+                  <label>计划说明（可选）</label>
+                  <textarea placeholder="填写里程碑计划说明、计划依据、关键假设等（线框占位）。"></textarea>
+                </div>
+                <div class="field col-12">
+                  <label>计划视图（甘特/阶段概览，占位）</label>
+                  <input readonly value="（此处为计划视图占位，后续可替换为甘特图组件/阶段卡片）" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">D. 里程碑清单</div></div>
+            <div class="card-body">
+              <div class="notice warn">
+                里程碑表字段来自SRS；其中“字段6表头缺失”在原型中以【待补】标记。
+              </div>
+              <div style="height:10px;"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>项目里程碑 <span class="req">*</span></th>
+                      <th>是否回款点 <span class="req">*</span></th>
+                      <th>完工比例累计 <span class="req">*</span></th>
+                      <th>预计达成时间（合同/方案）</th>
+                      <th>计划达成时间（项目经理） <span class="req">*</span></th>
+                      <th>达成条件/完成标准（待确认）</th>
+                      <th>备注说明</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input placeholder="选择/输入" /></td>
+                      <td>
+                        <select><option>否</option><option>是</option></select>
+                      </td>
+                      <td><input type="number" placeholder="0-100" /></td>
+                      <td><input type="date" /></td>
+                      <td><input type="date" /></td>
+                      <td><input placeholder="【待补】" /></td>
+                      <td><input placeholder="可选" /></td>
+                      <td><button>删除</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="8" class="muted">操作示意：可“新增一行/删除一行”（高保真阶段补充交互）。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="height:10px;"></div>
+              <button>+ 新增里程碑</button>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">E. 项目问题与风险录入（随启动流程一并提交）</div></div>
+            <div class="card-body">
+              <div class="notice warn">
+                说明：SRS中“问题与风险录入”流程字段存在缺口。本区为启动阶段问题/风险的最小结构占位，字段请以SRS最终确认为准。
+              </div>
+              <div style="height:10px;"></div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>类型（问题/风险）【待补】</th>
+                      <th>等级/严重度【待补】</th>
+                      <th>描述 <span class="req">*</span></th>
+                      <th>责任人【待补】</th>
+                      <th>计划关闭时间【待补】</th>
+                      <th>状态【待补】</th>
+                      <th>附件（可选）</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <select>
+                          <option>问题</option>
+                          <option>风险</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select>
+                          <option>高</option>
+                          <option>中</option>
+                          <option>低</option>
+                        </select>
+                      </td>
+                      <td><input placeholder="请描述问题/风险（口径以SRS为准）" /></td>
+                      <td><input placeholder="人员选择" /></td>
+                      <td><input type="date" /></td>
+                      <td>
+                        <select>
+                          <option>待处理</option>
+                          <option>处理中</option>
+                          <option>已关闭</option>
+                        </select>
+                      </td>
+                      <td><input type="file" /></td>
+                      <td><button>删除</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="8" class="muted">操作示意：可“新增一行/删除一行”。若后续仍保留独立“问题与风险录入流程”，此区可改为只读汇总或快速入口。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="height:10px;"></div>
+              <button>+ 新增问题/风险</button>
+            </div>
+          </div>
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">F. 项目启动文件上传</div></div>
+            <div class="card-body">
+              <div class="grid">
+                <div class="field col-12">
+                  <label>启动文件（需上传3份） <span class="req">*</span></label>
+                  <input id="startupFiles" type="file" multiple />
+                  <div id="startupFileMsg" class="hint">提交前需上传3份：建设方案、预算表、签到表（文件名需包含对应关键字）。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+  });
+
+  route('/flow/milestone-achieve', '流程中心 / 新建流程 / 里程碑达成', () => {
+    render(`
+      <div class="card">
+        ${flowHeader('里程碑达成流程表单', 'save')}
+        <div class="card-body">
+
+          <div class="notice">
+            3.3.1 里程碑达成流程：当完成里程碑要求的工作内容后，需与客户沟通并取得其签认的证明文件，随即发起“里程碑达成申请”流程；所有项目里程碑达成均需执行此流程。
+            支持一次提交多个里程碑：一个流程实例中可同时提交多个里程碑达成信息。
+            <span class="muted">线框说明：本页仅表达字段、展示/带出关系与计算口径；接口/数据源以SRS为准。</span>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- A. 基础信息 -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">A. 基础信息</div></div>
+            <div class="card-body">
+              <div class="notice warn" style="margin-bottom:12px;">
+                规则：选择项目名称后，系统自动带出项目编号及关联信息；项目编号支持跳转对应销售合同。
+              </div>
+
+              <div class="grid">
+                <!-- 1 申请人（自动） -->
+                <div class="field col-3">
+                  <label>申请人</label>
+                  <input id="ma_applicant" readonly value="（当前登录用户）" />
+                </div>
+                <!-- 2 申请日期（自动） -->
+                <div class="field col-3">
+                  <label>申请日期</label>
+                  <input id="ma_applyDate" type="date" readonly />
+                </div>
+                <!-- 3 项目名称（必填） -->
+                <div class="field col-4">
+                  <label>项目名称 <span class="req">*</span></label>
+                  <select id="ma_projectName">
+                    <option value="">请选择（有效销售合同）</option>
+                  </select>
+                </div>
+                <!-- 4 项目编号（必填，自动带出） -->
+                <div class="field col-2">
+                  <label>项目编号 <span class="req">*</span></label>
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <input id="ma_projectNo" readonly value="（自动带出）" />
+                    <button id="ma_goContract" class="btn" style="padding:6px 10px;">跳转</button>
+                  </div>
+                </div>
+
+                <!-- 关联显示：合同签订日期（用于校验示意） -->
+                <div class="field col-3">
+                  <label>合同签订日期（关联显示）</label>
+                  <input id="ma_contractSignDate" readonly value="（自动带出）" />
+                </div>
+
+                <!-- 13 项目状态（必填，可重新选择） -->
+                <div class="field col-3">
+                  <label>项目状态 <span class="req">*</span></label>
+                  <select id="ma_projectStatus">
+                    <option value="">请选择</option>
+                    <option>实施</option>
+                    <option>质保</option>
+                    <option>待结束</option>
+                    <option>结束</option>
+                    <option>挂起</option>
+                    <option>作废</option>
+                  </select>
+                  <div class="hint">说明：里程碑达成/里程碑变更流程中该项可重新选择更新。挂起：系统判断（超预算不允许报销/报工时）；作废：重复无效项目（无成本）。</div>
+                </div>
+
+                <div class="col-12">
+                  <div class="hint">
+                    基础数据填写口径：序号1、2自动获取；序号3（项目名称）由提起人选择；序号4（项目编号）随序号3自动带出；序号13由提起人手动选择更新。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- B. 里程碑达成信息（可多条） -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header">
+              <div class="card-title">B. 里程碑达成信息（支持一次提交多条）</div>
+            </div>
+            <div class="card-body">
+              <div class="notice warn" style="margin-bottom:12px;">
+                本区将带出“项目启动流程时已维护”的里程碑字段（只读展示）；需要在本流程补充的字段以<b style="background:#fff1f2;border:1px solid #fecaca;border-radius:8px;padding:1px 6px;">红底标识。
+              </div>
+
+              <div id="ma_items"></div>
+
+              <div style="height:10px;"></div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <button id="ma_addItem" class="btn">+ 新增里程碑达成</button>
+                <span class="muted" style="font-size:12px;">提示：一个流程实例内，可新增多条里程碑达成信息后一次提交。</span>
+              </div>
+
+              <div style="height:12px;"></div>
+              <div class="notice">
+                计算口径（线框示意）：
+                - 延期天数：系统根据“里程碑实际达成时间”与“里程碑计划达成时间（项目经理计划时间）”计算得出（晚于为正，提前为0）。
+                - 是否及时归档文件：系统根据“里程碑资料归档时间（上传日期） - 里程碑实际达成时间”计算（≤30天=是，否则=否）。
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+
+    // ===== 初始化逻辑：仅本页面生效（不影响其它页面） =====
+    (function initMilestoneAchieve(){
+      const $ = (id) => document.getElementById(id);
+      if(!$('ma_projectName')) return;
+
+      // 基础：申请日期=今天
+      const today = new Date();
+      const fmt = (d)=>{
+        const yyyy=d.getFullYear();
+        const mm=String(d.getMonth()+1).padStart(2,'0');
+        const dd=String(d.getDate()).padStart(2,'0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+      $('ma_applyDate').value = fmt(today);
+
+      // 示例：销售合同/项目数据（线框）
+      const contracts = [
+        {
+          id:'c1', name:'（示例）XX项目销售合同', no:'HT-2025-001', signDate:'2025-11-20',
+          milestones:[
+            { key:'m1', name:'立项', payPoint:'否', cumPct:10, estDate:'2025-12-10', planDate:'2025-12-15', archivePlan:'2026-01-15',
+              payments:[] },
+            { key:'m2', name:'方案评审', payPoint:'是', cumPct:25, estDate:'2026-01-20', planDate:'2026-01-25', archivePlan:'2026-02-25',
+              payments:[
+                { name:'首款', amt:200000, expectDate:'2026-02-10', cond:'客户签认评审纪要并盖章', status:'未回款' },
+                { name:'阶段款A', amt:150000, expectDate:'2026-03-01', cond:'完成阶段性交付并通过验收', status:'未回款' }
+              ] },
+            { key:'m3', name:'上线试运行', payPoint:'是', cumPct:60, estDate:'2026-04-15', planDate:'2026-04-20', archivePlan:'2026-05-20',
+              payments:[
+                { name:'阶段款B', amt:250000, expectDate:'2026-05-10', cond:'试运行通过并提交运行报告', status:'未回款' }
+              ] },
+            { key:'m4', name:'验收', payPoint:'是', cumPct:100, estDate:'2026-10-15', planDate:'2026-10-20', archivePlan:'2026-11-20',
+              payments:[
+                { name:'尾款', amt:400000, expectDate:'2026-11-15', cond:'最终验收通过并签署验收单', status:'未回款' }
+              ] },
+          ]
+        },
+        {
+          id:'c2', name:'（示例）YY项目销售合同', no:'HT-2025-002', signDate:'2025-10-05',
+          milestones:[
+            { key:'y1', name:'启动会', payPoint:'否', cumPct:15, estDate:'2025-12-05', planDate:'2025-12-08', archivePlan:'2026-01-08', payments:[] },
+            { key:'y2', name:'阶段验收', payPoint:'是', cumPct:70, estDate:'2026-03-10', planDate:'2026-03-15', archivePlan:'2026-04-15',
+              payments:[{ name:'阶段款', amt:300000, expectDate:'2026-04-01', cond:'阶段验收单盖章', status:'部分回款' }] },
+            { key:'y3', name:'最终验收', payPoint:'是', cumPct:100, estDate:'2026-07-01', planDate:'2026-07-10', archivePlan:'2026-08-10',
+              payments:[{ name:'尾款', amt:200000, expectDate:'2026-08-01', cond:'最终验收单盖章', status:'未回款' }] },
+          ]
+        }
+      ];
+
+      // 填充项目名称下拉
+      const pn = $('ma_projectName');
+      contracts.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        pn.appendChild(opt);
+      });
+
+      let currentContract = null;
+
+      // 工具：天数差
+      const dayDiff = (a,b)=>{
+        const A = new Date(a+'T00:00:00');
+        const B = new Date(b+'T00:00:00');
+        return Math.ceil((B-A)/(1000*60*60*24));
+      };
+
+      // 里程碑条目模板
+      function itemTemplate(index){
+        return `
+          <details class="card" style="box-shadow:none; margin-bottom:10px;" open>
+            <summary class="card-header" style="cursor:pointer; user-select:none;">
+              <div class="card-title">里程碑达成信息 #${index+1}</div>
+              <div class="muted" style="font-size:12px;">展开/收起填写明细</div>
+            </summary>
+            <div class="card-body">
+              <div class="grid">
+                <!-- 里程碑选择（必填） -->
+                <div class="field col-4">
+                  <label>项目里程碑 <span class="req">*</span></label>
+                  <select class="ma_milestoneSel" style="background:#fff1f2; border-color:#fecaca;">
+                    <option value="">请选择</option>
+                  </select>
+                </div>
+
+                <!-- 1 是否回款点（只读带出） -->
+                <div class="field col-2">
+                  <label>是否回款点</label>
+                  <input class="ma_payPoint" readonly value="—" />
+                </div>
+
+                <!-- 2 累计完工比例（只读带出） -->
+                <div class="field col-2">
+                  <label>完工比例（累计）</label>
+                  <input class="ma_cumPct" readonly value="—" />
+                </div>
+
+                <!-- 3 预计达成时间（只读带出） -->
+                <div class="field col-2">
+                  <label>预计达成时间</label>
+                  <input class="ma_estDate" readonly value="—" />
+                </div>
+
+                <!-- 4 计划达成时间（只读带出） -->
+                <div class="field col-2">
+                  <label>计划达成时间</label>
+                  <input class="ma_planDate" readonly value="—" />
+                </div>
+
+                <!-- 5 达成材料（说明/摘要，建议填写） -->
+                <div class="field col-12">
+                  <label>达成材料（说明）</label>
+                  <textarea class="ma_materialNote" rows="2" placeholder="例如：客户签认的会议纪要/验收单/盖章证明文件说明（线框）"></textarea>
+                </div>
+
+                <!-- 6 实际达成时间（必填，红底） -->
+                <div class="field col-3">
+                  <label>里程碑实际达成时间 <span class="req">*</span></label>
+                  <input class="ma_actualDate" type="date" style="background:#fff1f2; border-color:#fecaca;" />
+                  <div class="hint">口径：以实际盖章文件上的日期为准（示例格式：2025/06/13）。</div>
+                </div>
+
+                <!-- 7 资料归档时间（可自动=上传日期；允许查看/调整） -->
+                <div class="field col-3">
+                  <label>里程碑资料归档时间</label>
+                  <input class="ma_archiveDate" type="date" readonly value="（上传后自动带出）" />
+                  <div class="hint">线框：选择“达成资料”后自动写入上传日期。</div>
+                </div>
+
+                <!-- 8 达成资料上传（必填，红底） -->
+                <div class="field col-4">
+                  <label>项目里程碑达成资料 <span class="req">*</span></label>
+                  <input class="ma_files" type="file" multiple style="background:#fff1f2; border-color:#fecaca;" />
+                  <div class="hint">上传位置：项目里程碑达成资料归档区（线框占位）。</div>
+                </div>
+
+                <!-- 9 是否及时归档（自动） -->
+                <div class="field col-2">
+                  <label>是否及时归档文件</label>
+                  <input class="ma_timely" readonly value="—" />
+                </div>
+
+                <!-- 10 延期天数（自动） -->
+                <div class="field col-2">
+                  <label>延期天数</label>
+                  <input class="ma_delayDays" readonly value="—" />
+                </div>
+
+                <!-- 11~16 回款信息（仅回款点=是显示） -->
+                <div class="col-12 ma_payBlock" style="display:none; border:1px dashed var(--line); border-radius:12px; padding:10px; margin-top:6px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                    <div style="font-weight:700;">回款信息（仅回款点=是）</div>
+                    <div class="muted" style="font-size:12px;">款项信息来自原合同；选择款项名称后自动带出金额/日期/条件/状态。</div>
+                  </div>
+
+                  <div class="grid">
+                    <div class="field col-3">
+                      <label>款项名称</label>
+                      <select class="ma_payName">
+                        <option value="">请选择</option>
+                      </select>
+                      <div class="hint">规则：是否回款点=“是”时，可选择原合同对应的款项名称。</div>
+                    </div>
+
+                    <div class="field col-3">
+                      <label>当期收款金额</label>
+                      <input class="ma_payAmt" readonly value="—" />
+                    </div>
+
+                    <div class="field col-3">
+                      <label>预计收款日期</label>
+                      <input class="ma_payExpectDate" readonly value="—" />
+                    </div>
+
+                    <div class="field col-3">
+                      <label>当期收款条件</label>
+                      <input class="ma_payCond" readonly value="—" />
+                    </div>
+
+                    <div class="field col-3">
+                      <label>实际收款时间（财务填写）</label>
+                      <input class="ma_payActualDate" readonly value="（财务节点填写）" />
+                      <div class="hint">若未回款或未回完，财务可不填写。</div>
+                    </div>
+
+                    <div class="field col-3">
+                      <label>收款状态</label>
+                      <input class="ma_payStatus" readonly value="—" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 17 备注说明 -->
+                <div class="field col-12">
+                  <label>备注说明</label>
+                  <textarea class="ma_remark" rows="2" placeholder="可选：补充说明、异常情况说明等"></textarea>
+                </div>
+
+                <div class="col-12" style="display:flex; justify-content:flex-end; gap:10px;">
+                  <button class="btn ma_remove">删除本条</button>
+                </div>
+              </div>
+            </div>
+          </details>
+        `;
+      }
+
+      // 渲染一个条目并绑定事件
+      function appendItem(){
+        const wrap = $('ma_items');
+        const idx = wrap.querySelectorAll('details').length;
+        wrap.insertAdjacentHTML('beforeend', itemTemplate(idx));
+
+        const details = wrap.querySelectorAll('details')[idx];
+        const sel = details.querySelector('.ma_milestoneSel');
+        const removeBtn = details.querySelector('.ma_remove');
+
+        // 填充里程碑下拉（基于当前合同）
+        const list = currentContract ? currentContract.milestones : [];
+        sel.innerHTML = `<option value="">请选择</option>` + list.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
+
+        // 选择里程碑后带出字段
+        sel.addEventListener('change', ()=>{
+          const key = sel.value;
+          const m = (currentContract?.milestones || []).find(x=>x.key===key);
+          details.__milestone = m || null;
+
+          details.querySelector('.ma_payPoint').value = m ? m.payPoint : '—';
+          details.querySelector('.ma_cumPct').value = m ? (m.cumPct + '%') : '—';
+          details.querySelector('.ma_estDate').value = m ? m.estDate : '—';
+          details.querySelector('.ma_planDate').value = m ? m.planDate : '—';
+
+          // 回款块
+          const payBlock = details.querySelector('.ma_payBlock');
+          const payName = details.querySelector('.ma_payName');
+          if(m && m.payPoint === '是'){
+            payBlock.style.display = 'block';
+            payName.innerHTML = `<option value="">请选择</option>` + (m.payments||[]).map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+          }else{
+            payBlock.style.display = 'none';
+            payName.innerHTML = `<option value="">请选择</option>`;
+            details.querySelector('.ma_payAmt').value = '—';
+            details.querySelector('.ma_payExpectDate').value = '—';
+            details.querySelector('.ma_payCond').value = '—';
+            details.querySelector('.ma_payStatus').value = '—';
+          }
+        });
+
+        // 款项选择联动
+        details.querySelector('.ma_payName').addEventListener('change', (e)=>{
+          const m = details.__milestone;
+          const idx = Number(e.target.value);
+          const p = (m && m.payments && isFinite(idx)) ? m.payments[idx] : null;
+          details.querySelector('.ma_payAmt').value = p ? p.amt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+          details.querySelector('.ma_payExpectDate').value = p ? p.expectDate : '—';
+          details.querySelector('.ma_payCond').value = p ? p.cond : '—';
+          details.querySelector('.ma_payStatus').value = p ? p.status : '—';
+        });
+
+        // 上传=写归档日期（上传日期）+ 是否及时归档
+        const fileInput = details.querySelector('.ma_files');
+        const archiveDate = details.querySelector('.ma_archiveDate');
+        const timely = details.querySelector('.ma_timely');
+        const actualDate = details.querySelector('.ma_actualDate');
+        fileInput.addEventListener('change', ()=>{
+          archiveDate.value = fmt(new Date());
+          computeTimely();
+        });
+        actualDate.addEventListener('change', ()=>{
+          computeDelay();
+          computeTimely();
+          // 校验：实际达成时间不得早于合同签订日期（线框提示）
+          const sign = $('ma_contractSignDate').value;
+          if(sign && actualDate.value && actualDate.value < sign){
+            actualDate.style.outline = '2px solid #fb7185';
+            actualDate.title = '实际达成时间不得早于合同签订日期（线框校验）';
+          }else{
+            actualDate.style.outline = '';
+            actualDate.title = '';
+          }
+        });
+
+        function computeDelay(){
+          const m = details.__milestone;
+          const plan = m ? m.planDate : null;
+          const act = actualDate.value;
+          const out = details.querySelector('.ma_delayDays');
+          if(plan && act){
+            const d = dayDiff(plan, act); // plan->act
+            out.value = (d > 0 ? d : 0) + ' 天';
+          }else{
+            out.value = '—';
+          }
+        }
+
+        function computeTimely(){
+          const act = actualDate.value;
+          const arch = archiveDate.value;
+          if(act && arch){
+            const d = dayDiff(act, arch);
+            timely.value = (d <= 30 ? '是' : '否');
+          }else{
+            timely.value = '—';
+          }
+        }
+
+        // 删除本条
+        removeBtn.addEventListener('click', ()=>{
+          const wrap = $('ma_items');
+          const items = wrap.querySelectorAll('details');
+          if(items.length <= 1){
+            toast('至少需要保留1条里程碑达成信息（线框提示）。');
+            return;
+          }
+          details.remove();
+          // 重新编号标题
+          wrap.querySelectorAll('details').forEach((d,i)=>{
+            const t = d.querySelector('.card-title');
+            if(t) t.textContent = `里程碑达成信息 #${i+1}`;
+          });
+        });
+      }
+
+      // 项目切换
+      pn.addEventListener('change', ()=>{
+        const id = pn.value;
+        currentContract = contracts.find(c=>c.id===id) || null;
+
+        $('ma_projectNo').value = currentContract ? currentContract.no : '（自动带出）';
+        $('ma_contractSignDate').value = currentContract ? currentContract.signDate : '（自动带出）';
+
+        // 项目状态：默认“实施”（线框），如需按规则限制由SRS最终确定
+        if(!$('ma_projectStatus').value) $('ma_projectStatus').value = '实施';
+
+        // 重置里程碑条目（重新渲染一条）
+        $('ma_items').innerHTML = '';
+        appendItem();
+      });
+
+      // 跳转销售合同（线框）
+      $('ma_goContract').addEventListener('click', ()=>{
+        if(!$('ma_projectNo').value || $('ma_projectNo').value.includes('自动带出')){
+          toast('请先选择项目名称（线框提示）。');
+          return;
+        }
+        toast('线框占位：跳转到销售合同详情（按项目编号定位）。');
+      });
+
+      // 新增条目
+      $('ma_addItem').addEventListener('click', ()=>{
+        if(!currentContract){
+          toast('请先选择项目名称（线框提示）。');
+          return;
+        }
+        appendItem();
+      });
+
+      // 首次进入：不选择项目时也给出一条空条目（方便查看字段）
+      appendItem();
+    })();
+  });
+
+  route('/flow/milestone-change', '流程中心 / 新建流程 / 里程碑变更', () => {
+    render(`
+      <div class="card">
+        ${flowHeader('里程碑变更流程表单', 'save')}
+        <div class="card-body">
+
+          <div class="notice">
+            3.3.2 里程碑变更流程：当项目里程碑需要变更时，项目经理获得与客户沟通的证明文件后，发起“里程碑变更申请”流程，修改里程碑计划达成时间（项目经理预计）；在备注说明注明原因，并上传证明资料。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- A. 基础信息（选择项目后自动带出） -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">A. 基础信息</div></div>
+            <div class="card-body">
+              <div class="notice warn" style="margin-bottom:12px;">
+                规则：选择项目名称后自动带出项目编号及关联数据；项目编号支持跳转对应销售合同。
+                说明：序号1/2/3/4由流程提起人填写或选择；序号13可在本流程中重新选择更新（新建时可先隐藏，提交流程前需补齐）。
+              </div>
+
+              <div class="grid">
+                <!-- 1 申请人：花名册自动获取（线框显示为只读） -->
+                <div class="field col-3">
+                  <label>申请人 <span class="req">*</span></label>
+                  <input id="mc_applicant" readonly value="（当前登录用户）" />
+                </div>
+
+                <!-- 2 申请日期：手动添加，但默认=新建日期 -->
+                <div class="field col-3">
+                  <label>申请日期 <span class="req">*</span></label>
+                  <input id="mc_applyDate" type="date" />
+                  <div class="hint">默认=新建流程日期，可调整。</div>
+                </div>
+
+                <!-- 3 项目名称：必填，来自销售合同模块 -->
+                <div class="field col-4">
+                  <label>项目名称 <span class="req">*</span></label>
+                  <select id="mc_projectName">
+                    <option value="">请选择（有效销售合同）</option>
+                  </select>
+                </div>
+
+                <!-- 4 项目编号：必填，随项目名称自动带出 -->
+                <div class="field col-2">
+                  <label>项目编号 <span class="req">*</span></label>
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <input id="mc_projectNo" readonly value="（自动带出）" />
+                    <button id="mc_goContract" class="btn" style="padding:6px 10px;">跳转</button>
+                  </div>
+                </div>
+
+                <!-- 关联显示：项目开始时间（用于结束时间校验） -->
+                <div class="field col-3">
+                  <label>项目开始时间（关联显示）</label>
+                  <input id="mc_startDate" readonly value="（自动带出）" />
+                </div>
+
+                <!-- 高级区：新建该流程时可不显示（但提交前需满足必填/规则） -->
+                <div class="col-12">
+                  <details class="card" style="box-shadow:none;">
+                    <summary class="card-header" style="cursor:pointer; user-select:none;">
+                      <div class="card-title">更多信息（提交前需补齐）</div>
+                      <div class="muted" style="font-size:12px;">新建该流程时可先隐藏；展开填写项目状态/项目结束时间等</div>
+                    </summary>
+                    <div class="card-body">
+                      <div class="grid">
+                        <!-- 13 项目状态：必填，六选一 -->
+                        <div class="field col-3">
+                          <label>项目状态 <span class="req">*</span></label>
+                          <select id="mc_projectStatus">
+                            <option value="">请选择</option>
+                            <option>实施</option>
+                            <option>质保</option>
+                            <option>待结束</option>
+                            <option>结束</option>
+                            <option>挂起</option>
+                            <option>作废</option>
+                          </select>
+                          <div class="hint">挂起：系统判断（超预算不允许报销/报工时）；作废：重复无效项目（无成本）。</div>
+                        </div>
+
+                        <!-- 15 项目结束时间：当里程碑计划时间调整时需重新选择 -->
+                        <div class="field col-3">
+                          <label>项目结束时间 <span class="req">*</span></label>
+                          <input id="mc_endDate" type="date" />
+                          <div class="hint">
+                            规则：不得早于项目开始时间；不得晚于“启动流程首次填写结束时间 + 1年”，否则不可提交。
+                          </div>
+                        </div>
+
+                        <!-- 启动流程首次结束时间（只读带出，用于上限校验） -->
+                        <div class="field col-3">
+                          <label>启动流程首次结束时间（关联显示）</label>
+                          <input id="mc_firstEndDate" readonly value="（自动带出）" />
+                        </div>
+
+                        <!-- 校验提示占位 -->
+                        <div class="field col-3">
+                          <label>校验结果</label>
+                          <input id="mc_baseValidate" readonly value="—" />
+                          <div class="hint">线框：触发校验时给出“通过/不通过及原因”。</div>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- B. 里程碑变更明细 -->
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">B. 里程碑变更明细</div></div>
+            <div class="card-body">
+              <div class="notice warn" style="margin-bottom:12px;">
+                本流程仅变更：里程碑计划达成时间（项目经理计划时间）。
+                校验：新日期不得比原计划达成时间延迟超过6个月，否则流程报错不可提交。
+              </div>
+
+              <div class="grid">
+                <div class="field col-4">
+                  <label>选择变更里程碑 <span class="req">*</span></label>
+                  <select id="mc_milestoneSel" style="background:#fff1f2; border-color:#fecaca;">
+                    <option value="">请先选择项目</option>
+                  </select>
+                </div>
+
+                <div class="field col-2">
+                  <label>是否回款点</label>
+                  <input id="mc_payPoint" readonly value="—" />
+                </div>
+
+                <div class="field col-2">
+                  <label>完工比例（累计）</label>
+                  <input id="mc_cumPct" readonly value="—" />
+                </div>
+
+                <div class="field col-2">
+                  <label>预计达成时间</label>
+                  <input id="mc_estDate" readonly value="—" />
+                </div>
+
+                <div class="field col-2">
+                  <label>原计划达成时间</label>
+                  <input id="mc_planOld" readonly value="—" />
+                </div>
+
+                <!-- 变更字段：计划达成时间（新） -->
+                <div class="field col-3">
+                  <label>新计划达成时间 <span class="req">*</span></label>
+                  <input id="mc_planNew" type="date" style="background:#fff1f2; border-color:#fecaca;" />
+                  <div class="hint">规则：新日期不得比原计划延迟超过6个月。</div>
+                </div>
+
+                <div class="field col-3">
+                  <label>变更幅度（天）</label>
+                  <input id="mc_deltaDays" readonly value="—" />
+                  <div class="hint">线框：新计划-原计划（延迟为正）。</div>
+                </div>
+
+                <div class="field col-6">
+                  <label>备注说明（变更原因） <span class="req">*</span></label>
+                  <textarea id="mc_reason" rows="2" style="background:#fff1f2; border-color:#fecaca;" placeholder="请输入变更原因（需与客户沟通文件一致）"></textarea>
+                </div>
+
+                <div class="field col-6">
+                  <label>证明资料上传 <span class="req">*</span></label>
+                  <input id="mc_proofFiles" type="file" multiple style="background:#fff1f2; border-color:#fecaca;" />
+                  <div class="hint">上传：客户沟通/签认证明材料（线框占位）。</div>
+                </div>
+
+                <!-- 回款块：只读关联显示 -->
+                <div class="col-12" id="mc_payBlock" style="display:none; border:1px dashed var(--line); border-radius:12px; padding:10px; margin-top:6px;">
+                  <div style="font-weight:700; margin-bottom:8px;">回款信息（关联显示，仅回款点=是）</div>
+                  <div class="grid">
+                    <div class="field col-3">
+                      <label>款项名称</label>
+                      <select id="mc_payName">
+                        <option value="">请选择</option>
+                      </select>
+                    </div>
+                    <div class="field col-3"><label>当期收款金额</label><input id="mc_payAmt" readonly value="—" /></div>
+                    <div class="field col-3"><label>预计收款日期</label><input id="mc_payExpectDate" readonly value="—" /></div>
+                    <div class="field col-3"><label>当期收款条件</label><input id="mc_payCond" readonly value="—" /></div>
+                    <div class="field col-3"><label>实际收款时间（财务填写）</label><input id="mc_payActualDate" readonly value="（财务节点填写）" /></div>
+                    <div class="field col-3"><label>收款状态</label><input id="mc_payStatus" readonly value="—" /></div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="notice" id="mc_validateMsg">
+                    校验提示：请选择项目与里程碑，并填写新计划达成时间/原因/证明资料。
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+
+    // ===== 初始化逻辑：仅本页面生效（不影响其它页面） =====
+    (function initMilestoneChange(){
+      const $ = (id)=>document.getElementById(id);
+      if(!$('mc_projectName')) return;
+
+      // 日期工具
+      const fmt = (d)=>{
+        const yyyy=d.getFullYear();
+        const mm=String(d.getMonth()+1).padStart(2,'0');
+        const dd=String(d.getDate()).padStart(2,'0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+      const addMonths = (dateStr, months)=>{
+        const d = new Date(dateStr+'T00:00:00');
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        const dd = d.getDate();
+        const nd = new Date(y, m + months, dd);
+        // JS 处理月末溢出：回退到该月最后一天
+        if(nd.getMonth() !== ((m + months) % 12 + 12) % 12){
+          // set to last day of previous month
+          nd.setDate(0);
+        }
+        return fmt(nd);
+      };
+      const dayDiff = (a,b)=>{
+        const A = new Date(a+'T00:00:00');
+        const B = new Date(b+'T00:00:00');
+        return Math.ceil((B-A)/(1000*60*60*24));
+      };
+
+      // 默认申请日期=今天（可编辑）
+      $('mc_applyDate').value = fmt(new Date());
+
+      // 示例：销售合同/启动数据（线框）
+      const contracts = [
+        {
+          id:'c1', name:'（示例）XX项目销售合同', no:'HT-2025-001',
+          startDate:'2025-12-01',
+          firstEndDate:'2026-12-01', // 启动流程首次填写的结束时间（示例）
+          milestones:[
+            { key:'m1', name:'立项', payPoint:'否', cumPct:10, estDate:'2025-12-10', planDate:'2025-12-15', payments:[] },
+            { key:'m2', name:'方案评审', payPoint:'是', cumPct:25, estDate:'2026-01-20', planDate:'2026-01-25',
+              payments:[
+                { name:'首款', amt:200000, expectDate:'2026-02-10', cond:'客户签认评审纪要并盖章', status:'未回款' }
+              ] },
+            { key:'m3', name:'上线试运行', payPoint:'是', cumPct:60, estDate:'2026-04-15', planDate:'2026-04-20',
+              payments:[{ name:'阶段款B', amt:250000, expectDate:'2026-05-10', cond:'试运行通过并提交运行报告', status:'未回款' }] },
+            { key:'m4', name:'验收', payPoint:'是', cumPct:100, estDate:'2026-10-15', planDate:'2026-10-20',
+              payments:[{ name:'尾款', amt:400000, expectDate:'2026-11-15', cond:'最终验收通过并签署验收单', status:'未回款' }] },
+          ]
+        },
+        {
+          id:'c2', name:'（示例）YY项目销售合同', no:'HT-2025-002',
+          startDate:'2025-11-15',
+          firstEndDate:'2026-11-15',
+          milestones:[
+            { key:'y1', name:'启动会', payPoint:'否', cumPct:15, estDate:'2025-12-05', planDate:'2025-12-08', payments:[] },
+            { key:'y2', name:'阶段验收', payPoint:'是', cumPct:70, estDate:'2026-03-10', planDate:'2026-03-15',
+              payments:[{ name:'阶段款', amt:300000, expectDate:'2026-04-01', cond:'阶段验收单盖章', status:'部分回款' }] }
+          ]
+        }
+      ];
+
+      // 填充项目名称下拉
+      const pn = $('mc_projectName');
+      contracts.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        pn.appendChild(opt);
+      });
+
+      let currentContract = null;
+      let currentMilestone = null;
+
+      // 刷新里程碑下拉
+      function refreshMilestones(){
+        const sel = $('mc_milestoneSel');
+        if(!currentContract){
+          sel.innerHTML = `<option value="">请先选择项目</option>`;
+          return;
+        }
+        sel.innerHTML = `<option value="">请选择</option>` + currentContract.milestones.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
+      }
+
+      // 基础校验（结束时间范围）
+      function validateBase(){
+        const msg = [];
+        const start = $('mc_startDate').value;
+        const end = $('mc_endDate').value;
+        const firstEnd = $('mc_firstEndDate').value;
+
+        // 上限：首次结束+1年
+        let maxEnd = '';
+        if(firstEnd){
+          maxEnd = addMonths(firstEnd, 12); // +12个月
+        }
+
+        if(start && end){
+          if(end < start) msg.push('项目结束时间不得早于项目开始时间。');
+        }
+        if(end && maxEnd){
+          if(end > maxEnd) msg.push('项目结束时间不得晚于“启动流程首次结束时间+1年”。');
+        }
+
+        $('mc_baseValidate').value = msg.length ? ('不通过：' + msg.join('；')) : '通过';
+        return msg;
+      }
+
+      // 里程碑校验（新计划<=原计划+6个月）
+      function validateMilestone(){
+        const msg = [];
+        const planOld = $('mc_planOld').value;
+        const planNew = $('mc_planNew').value;
+
+        if(planOld && planNew){
+          const maxNew = addMonths(planOld, 6);
+          const d = dayDiff(planOld, planNew);
+          $('mc_deltaDays').value = (isFinite(d) ? d : '—') + (isFinite(d) ? ' 天' : '');
+
+          if(planNew > maxNew){
+            msg.push(`新计划达成时间延迟超过6个月（原计划+6个月上限：${maxNew}）。`);
+          }
+        }else{
+          $('mc_deltaDays').value = '—';
+        }
+
+        return msg;
+      }
+
+      function setValidateMsg(lines){
+        const box = $('mc_validateMsg');
+        if(!lines.length){
+          box.className = 'notice';
+          box.innerHTML = '校验通过（线框）。';
+        }else{
+          box.className = 'notice warn';
+          box.innerHTML = '<b>校验不通过：</b>' + lines.map(x=>`<div>- ${x}</div>`).join('');
+        }
+      }
+
+      // 项目切换
+      pn.addEventListener('change', ()=>{
+        const id = pn.value;
+        currentContract = contracts.find(c=>c.id===id) || null;
+
+        $('mc_projectNo').value = currentContract ? currentContract.no : '（自动带出）';
+        $('mc_startDate').value = currentContract ? currentContract.startDate : '（自动带出）';
+        $('mc_firstEndDate').value = currentContract ? currentContract.firstEndDate : '（自动带出）';
+
+        // 默认项目结束时间=首次结束时间（线框）
+        $('mc_endDate').value = currentContract ? currentContract.firstEndDate : '';
+
+        // 默认项目状态=实施（线框）
+        if(!$('mc_projectStatus').value) $('mc_projectStatus').value = '实施';
+
+        // 重置里程碑信息
+        refreshMilestones();
+        $('mc_milestoneSel').value = '';
+        currentMilestone = null;
+        ['mc_payPoint','mc_cumPct','mc_estDate','mc_planOld'].forEach(id=>$(id).value='—');
+        $('mc_planNew').value = '';
+        $('mc_reason').value = '';
+        $('mc_proofFiles').value = '';
+        $('mc_deltaDays').value = '—';
+        $('mc_payBlock').style.display = 'none';
+
+        const baseMsg = validateBase();
+        setValidateMsg(['请选择里程碑并填写变更信息。', ...baseMsg].filter(Boolean));
+      });
+
+      // 跳转销售合同
+      $('mc_goContract').addEventListener('click', ()=>{
+        if(!$('mc_projectNo').value || $('mc_projectNo').value.includes('自动带出')){
+          toast('请先选择项目名称（线框提示）。');
+          return;
+        }
+        toast('线框占位：跳转到销售合同详情（按项目编号定位）。');
+      });
+
+      // 里程碑选择
+      $('mc_milestoneSel').addEventListener('change', (e)=>{
+        const key = e.target.value;
+        currentMilestone = currentContract ? currentContract.milestones.find(x=>x.key===key) : null;
+
+        $('mc_payPoint').value = currentMilestone ? currentMilestone.payPoint : '—';
+        $('mc_cumPct').value = currentMilestone ? (currentMilestone.cumPct + '%') : '—';
+        $('mc_estDate').value = currentMilestone ? currentMilestone.estDate : '—';
+        $('mc_planOld').value = currentMilestone ? currentMilestone.planDate : '—';
+
+        // 回款信息块
+        const payBlock = $('mc_payBlock');
+        const payName = $('mc_payName');
+        if(currentMilestone && currentMilestone.payPoint === '是'){
+          payBlock.style.display = 'block';
+          payName.innerHTML = `<option value="">请选择</option>` + (currentMilestone.payments||[]).map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+        }else{
+          payBlock.style.display = 'none';
+          payName.innerHTML = `<option value="">请选择</option>`;
+          $('mc_payAmt').value = '—';
+          $('mc_payExpectDate').value = '—';
+          $('mc_payCond').value = '—';
+          $('mc_payStatus').value = '—';
+        }
+
+        const errs = [...validateBase(), ...validateMilestone()];
+        setValidateMsg(errs.length ? errs : ['请填写新计划达成时间、备注说明、证明资料。']);
+      });
+
+      // 款项联动（只读带出）
+      $('mc_payName').addEventListener('change', (e)=>{
+        const idx = Number(e.target.value);
+        const p = (currentMilestone && currentMilestone.payments && isFinite(idx)) ? currentMilestone.payments[idx] : null;
+        $('mc_payAmt').value = p ? p.amt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+        $('mc_payExpectDate').value = p ? p.expectDate : '—';
+        $('mc_payCond').value = p ? p.cond : '—';
+        $('mc_payStatus').value = p ? p.status : '—';
+      });
+
+      // 结束时间变更校验
+      $('mc_endDate').addEventListener('change', ()=>{
+        const errs = [...validateBase(), ...validateMilestone()];
+        setValidateMsg(errs);
+      });
+
+      // 新计划时间校验
+      $('mc_planNew').addEventListener('change', ()=>{
+        const errs = [...validateBase(), ...validateMilestone()];
+        setValidateMsg(errs);
+      });
+
+      // 原因/上传：触发提示更新（线框）
+      $('mc_reason').addEventListener('input', ()=>{
+        const errs = [...validateBase(), ...validateMilestone()];
+        setValidateMsg(errs);
+      });
+      $('mc_proofFiles').addEventListener('change', ()=>{
+        const errs = [...validateBase(), ...validateMilestone()];
+        setValidateMsg(errs);
+      });
+
+      // 首次进入：提示
+      setValidateMsg(['请选择项目后开始填写。']);
+    })();
+  });
+
+  route('/flow/status-change', '流程中心 / 新建流程 / 项目状态变更', () => {
+    render(`
+      <div class="card">
+        ${flowHeader('项目状态变更流程表单', 'save')}
+        <div class="card-body">
+          <div class="notice">
+            状态定义（按SRS）：实施/质保允许报工/报销/采购；待结束/结束/挂起不允许；作废用于重复无效且无成本项目。
+          </div>
+          <div class="notice warn" style="margin-top:10px;">
+            若项目当前处于挂起且挂起原因为交付团队成本执行情况 ≥ 110%，需先发起并通过项目成本预算变更流程，再进行状态变更以恢复报工/报销。
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">A. 基础信息</div></div>
+            <div class="card-body">
+              <div class="grid">
+                <div class="field col-6"><label>项目名称 <span class="req">*</span></label><input placeholder="选择/搜索" /></div>
+                <div class="field col-3"><label>项目编号 <span class="req">*</span></label><input readonly value="（自动带出）" /></div>
+                <div class="field col-3"><label>申请日期 <span class="req">*</span></label><input type="date" /></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="card-header"><div class="card-title">B. 状态变更</div></div>
+            <div class="card-body">
+              <div class="grid">
+                <div class="field col-4">
+                  <label>当前状态（带出）</label>
+                  <input readonly value="（自动带出）" />
+                </div>
+                <div class="field col-4">
+                  <label>项目交付团队成本执行情况（带出）</label>
+                  <input readonly value="（自动带出，如 112.0%）" />
+                  <div class="hint">若≥110%导致挂起，需先走“项目成本预算变更”。</div>
+                </div>
+                <div class="field col-4">
+                  <label>目标状态 <span class="req">*</span></label>
+                  <select>
+                    <option value="">请选择目标状态</option>
+                    <option>实施</option>
+                    <option>质保</option>
+                    <option>待结束</option>
+                    <option>结束</option>
+                    <option>作废</option>
+                  </select>
+                </div>
+                <div class="field col-4">
+                  <label>变更原因 <span class="req">*</span></label>
+                  <input placeholder="例如：成本超预算/客户原因/合同作废等" />
+                </div>
+
+                <div class="field col-12">
+                  <label>说明</label>
+                  <textarea placeholder="补充说明（可选）"></textarea>
+                  <div class="hint">提示：若为“解挂”，按SRS应先走“成本预算变更流程”（原型提示）。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `);
+  });
+
+  // init
+  navigate();
+</script>
+</body>
+</html>
